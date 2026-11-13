@@ -2,35 +2,62 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "newProjectRoot": "projects",
-  "cli": { "analytics": false },
+  "cli": {
+    "analytics": false
+  },
   "projects": {
-    "buildsync": {
+    "constructx": {
       "projectType": "application",
       "schematics": {
-        "@schematics/angular:component": { "style": "scss", "standalone": true }
+        "@schematics/angular:component": {
+          "style": "scss",
+          "standalone": true
+        }
       },
       "root": "",
       "sourceRoot": "src",
-      "prefix": "bs",
+      "prefix": "cx",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/buildsync",
+            "outputPath": "dist/constructx",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "assets": [{ "glob": "**/*", "input": "src/assets", "output": "assets" }],
-            "styles": ["src/styles.scss"],
-            "stylePreprocessorOptions": { "includePaths": ["src/styles"] }
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
+              }
+            ],
+            "styles": [
+              "src/styles.scss"
+            ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "src/styles"
+              ]
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
-                { "type": "initial", "maximumWarning": "600kB", "maximumError": "1MB" },
-                { "type": "anyComponentStyle", "maximumWarning": "8kB", "maximumError": "16kB" }
+                {
+                  "type": "initial",
+                  "maximumWarning": "600kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "16kB"
+                }
               ],
               "outputHashing": "all"
             },
@@ -38,6 +65,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "e2e": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -45,8 +83,15 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": { "buildTarget": "buildsync:build:production" },
-            "development": { "buildTarget": "buildsync:build:development" }
+            "production": {
+              "buildTarget": "constructx:build:production"
+            },
+            "development": {
+              "buildTarget": "constructx:build:development"
+            },
+            "e2e": {
+              "buildTarget": "constructx:build:e2e"
+            }
           },
           "defaultConfiguration": "development"
         }

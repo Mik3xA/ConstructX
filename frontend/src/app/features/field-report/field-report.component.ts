@@ -16,7 +16,7 @@ const TOLERANCIA_PREVIEW = 5;
  * y actualiza el porcentaje de avance real de la fase.
  */
 @Component({
-  selector: 'bs-field-report',
+  selector: 'cx-field-report',
   standalone: true,
   imports: [AsyncPipe, DecimalPipe, FormsModule, ProgressBarComponent],
   templateUrl: './field-report.component.html',

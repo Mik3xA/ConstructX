@@ -1,27 +1,6 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  min-height: 100%;
-
-  @include md {
-    padding: 2rem 2.5rem;
-  }
-
-  &__header {
-    h1 {
-      font-size: 1.85rem;
-      margin: 0.25rem 0;
-    }
-    p {
-      margin: 0;
-    }
-  }
-}
 
 .selectors {
   display: grid;
@@ -66,7 +45,7 @@
     'info  budget'
     'input input'
     'bar   bar';
-  border-top: 1px solid $white-04;
+  border-top: 1px solid var(--border);
 
   @include md {
     grid-template-columns: minmax(0, 1.2fr) auto 170px;
@@ -78,7 +57,7 @@
 
   &--risk {
     .line__info strong {
-      color: $orange-300;
+      color: var(--danger);
     }
   }
 
@@ -146,11 +125,11 @@
     font-size: 3rem;
     font-weight: 600;
     line-height: 1;
-    color: $blue-400;
+    color: var(--primary-orange);
 
     small {
       font-size: 1.25rem;
-      color: $white-60;
+      color: var(--text-muted);
     }
   }
 
@@ -170,5 +149,5 @@
   display: grid;
   place-items: center;
   padding: 3rem;
-  color: $white-60;
+  color: var(--text-muted);
 }

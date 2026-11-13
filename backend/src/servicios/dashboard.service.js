@@ -1,5 +1,6 @@
 const { db } = require('../config/database');
 const AlertaModel = require('../modelos/alerta.model');
+const PedidoModel = require('../modelos/pedido.model');
 
 /** KPIs del panel del Admin. */
 function resumen() {
@@ -45,7 +46,14 @@ function resumen() {
     )
     .all();
 
-  return { kpis, proyectos, stock, alertas: AlertaModel.list({ estado: 'ACTIVA' }) };
+  return {
+    kpis,
+    comercial: PedidoModel.resumen(),
+    pedidos_recientes: PedidoModel.list({ limit: 8 }),
+    proyectos,
+    stock,
+    alertas: AlertaModel.list({ estado: 'ACTIVA' }),
+  };
 }
 
 module.exports = { resumen };

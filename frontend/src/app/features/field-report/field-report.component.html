@@ -40,7 +40,7 @@
       <section class="card">
         <div class="card__head">
           <h2>Consumo del día · {{ tarea.nombre }}</h2>
-          <span class="chip chip--blue">{{ tarea.bom.length }} materiales en BOM</span>
+          <span class="chip chip--amber">{{ tarea.bom.length }} materiales en BOM</span>
         </div>
 
         @for (l of tarea.bom; track l.id) {
@@ -70,8 +70,8 @@
             </div>
 
             <div class="line__bar">
-              <bs-progress-bar [valor]="consumoProyectado(l)" [marcador]="avance" [alerta]="excedeTolerancia(l)" />
-              <span class="mono" [class.text-accent]="excedeTolerancia(l)">
+              <cx-progress-bar [valor]="consumoProyectado(l)" [marcador]="avance" [alerta]="excedeTolerancia(l)" />
+              <span class="mono" [class.text-danger]="excedeTolerancia(l)">
                 {{ consumoProyectado(l) | number: '1.0-1' }}%
               </span>
             </div>
@@ -109,7 +109,7 @@
         <button
           class="btn btn--lg btn--block"
           [class.btn--primary]="lineasEnRiesgo === 0"
-          [class.btn--warning]="lineasEnRiesgo > 0"
+          [class.btn--danger]="lineasEnRiesgo > 0"
           type="button"
           (click)="enviar()"
           [disabled]="!hayCambios || enviando"

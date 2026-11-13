@@ -1,0 +1,252 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.small {
+  font-size: 0.8rem;
+}
+
+.layout {
+  display: grid;
+  gap: 1.1rem;
+  align-items: start;
+
+  @include lg {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+
+.items {
+  padding: 0.5rem 1.25rem;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'img info remove'
+    'img qty  subtotal';
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  @include md {
+    grid-template-columns: 76px minmax(0, 1fr) 150px 120px 40px;
+    grid-template-areas: 'img info qty subtotal remove';
+  }
+
+  &.has-error .item__qty .input {
+    border-color: var(--danger);
+  }
+
+  &__img {
+    grid-area: img;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: $radius;
+  }
+
+  &__info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 0.88rem;
+    strong {
+      font-size: 0.95rem;
+    }
+  }
+
+  &__qty {
+    grid-area: qty;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    .input {
+      width: 90px;
+      text-align: right;
+    }
+    span {
+      font-size: 0.8rem;
+    }
+  }
+
+  &__subtotal {
+    grid-area: subtotal;
+    text-align: right;
+  }
+
+  &__remove {
+    grid-area: remove;
+    justify-self: end;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    &:hover {
+      color: var(--danger);
+      background: var(--danger-soft);
+    }
+  }
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include lg {
+    position: sticky;
+    top: 1rem;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  h2 {
+    font-size: 1.05rem;
+  }
+}
+
+.totals {
+  transition: opacity $transition;
+  &.is-loading {
+    opacity: 0.6;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+
+  &--total {
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1rem;
+    .mono {
+      font-size: 1.5rem;
+      color: var(--primary-orange);
+      font-weight: 800;
+    }
+  }
+}
+
+// ---------- Confirmación ----------
+.success {
+  max-width: 640px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  animation: aparecer 500ms cubic-bezier(0.2, 0.9, 0.25, 1.1);
+
+  h1 {
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+  }
+  p {
+    margin: 0;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    color: var(--primary-orange);
+    margin-bottom: 0.5rem;
+    svg {
+      width: 34px;
+      height: 34px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 30;
+      stroke-dashoffset: 30;
+      animation: trazo 600ms 250ms ease forwards;
+    }
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    width: 100%;
+    margin: 1.25rem 0;
+    @include md {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    div {
+      padding: 0.75rem;
+      border-radius: $radius;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    dt {
+      @include eyebrow;
+      font-size: 0.66rem;
+    }
+    dd {
+      margin: 0.2rem 0 0;
+      font-weight: 700;
+    }
+    .total {
+      color: var(--primary-orange);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes trazo {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

@@ -1,31 +1,6 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  padding: 1.25rem;
-  min-height: 100%;
-
-  @include md {
-    padding: 2rem 2.5rem;
-  }
-
-  &__header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-
-    h1 {
-      font-size: 1.85rem;
-      margin-top: 0.25rem;
-    }
-  }
-}
-
 .kpis {
   display: grid;
   gap: 1rem;
@@ -42,30 +17,14 @@
   grid-template-columns: minmax(0, 1fr);
 
   @include lg {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
     grid-template-areas:
-      'alerts projects'
-      'alerts stock';
-    .alerts {
-      grid-area: alerts;
-    }
-    .projects {
-      grid-area: projects;
-    }
-    .stock {
-      grid-area: stock;
-    }
-  }
-}
-
-.card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-
-  h2 {
-    font-size: 1.05rem;
+      'orders  alerts'
+      'stock   projects';
+    .orders { grid-area: orders; }
+    .alerts { grid-area: alerts; }
+    .projects { grid-area: projects; }
+    .stock { grid-area: stock; }
   }
 }
 
@@ -81,25 +40,21 @@
   gap: 0.9rem;
   padding: 1rem;
   border-radius: $radius;
-  border: 1px solid rgba($orange-500, 0.3);
-  background: linear-gradient(90deg, rgba($orange-500, 0.1), rgba($orange-500, 0.02));
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
 
   & + & {
     margin-top: 0.75rem;
   }
 
-  @include md {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
   &__icon {
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: $orange-500;
-    color: $charcoal-950;
+    background: var(--danger);
+    color: var(--surface);
     font-weight: 800;
   }
 
@@ -108,13 +63,8 @@
     flex-direction: column;
     gap: 0.35rem;
     min-width: 0;
-
-    strong {
-      font-size: 0.95rem;
-    }
-    > .muted {
-      font-size: 0.8rem;
-    }
+    strong { font-size: 0.93rem; }
+    > .muted { font-size: 0.8rem; }
   }
 
   &__metrics {
@@ -122,40 +72,13 @@
     flex-wrap: wrap;
     gap: 0.5rem 1.25rem;
     margin: 0.35rem 0 0.5rem;
-
-    div {
-      display: flex;
-      flex-direction: column;
-    }
-    .mono {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
+    div { display: flex; flex-direction: column; }
+    .mono { font-size: 1.05rem; font-weight: 700; }
   }
 
   &__btn {
     grid-column: 2;
     justify-self: start;
-    height: 34px;
-    @include md {
-      grid-column: auto;
-      align-self: start;
-    }
-  }
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 2.5rem 1rem;
-  text-align: center;
-  color: $blue-400;
-
-  p {
-    color: $white-60;
-    margin: 0;
   }
 }
 
@@ -171,13 +94,14 @@
     width: 14px;
     height: 6px;
     border-radius: 3px;
-    background: $blue-500;
+    background: var(--accent-amber);
   }
   &__mark {
     display: inline-block;
-    width: 2px;
+    width: 3px;
     height: 12px;
-    background: $white;
+    margin-left: 0.4rem;
+    background: var(--text);
   }
 }
 
@@ -187,23 +111,15 @@
   gap: 0.6rem;
   padding: 0.9rem 0;
 
-  & + & {
-    border-top: 1px solid $white-04;
-  }
+  & + & { border-top: 1px solid var(--border); }
 
   &__top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
-
-    div {
-      display: flex;
-      flex-direction: column;
-    }
-    .muted {
-      font-size: 0.8rem;
-    }
+    div { display: flex; flex-direction: column; }
+    .muted { font-size: 0.8rem; }
   }
 
   &__nums {
@@ -215,11 +131,4 @@
 
 .stock__bar {
   width: 40%;
-}
-
-.loading {
-  display: grid;
-  place-items: center;
-  flex: 1;
-  color: $white-60;
 }

@@ -27,3 +27,10 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Recibos generados en modo desarrollo
+backend/correos/
+
+# Resultados de Playwright
+e2e/test-results/
+e2e/playwright-report/

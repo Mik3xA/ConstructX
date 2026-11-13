@@ -7,6 +7,7 @@
  *     INGRESO_BODEGA  -> +cantidad
  *     ENVIO_OBRA      -> -cantidad (rechazado si no hay stock)
  *     CONSUMO_OBRA    -> sin efecto (el material ya salió de bodega)
+ *     SALIDA_FLETE    -> lo genera exclusivamente pedidos.service.js al confirmar un pedido
  */
 const { randomUUID } = require('crypto');
 const { db, ahora } = require('../config/database');
@@ -55,6 +56,9 @@ function registrar(data, usuario) {
 
   if (!MovimientoModel.TIPOS.includes(tipo)) {
     throw new HttpError(400, `tipo inválido. Valores: ${MovimientoModel.TIPOS.join(', ')}`);
+  }
+  if (tipo === 'SALIDA_FLETE') {
+    throw new HttpError(400, 'SALIDA_FLETE se genera automáticamente al confirmar un pedido de flete');
   }
   if (!puedeRegistrar(usuario.rol, tipo)) {
     throw new HttpError(403, `El rol '${usuario.rol}' no puede registrar ${tipo}`);

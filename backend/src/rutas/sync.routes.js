@@ -5,6 +5,6 @@ const { asyncHandler: h } = require('../middlewares/error.middleware');
 
 const router = Router();
 
-router.post('/sync', verifyToken, verifyRole(ROLES.BODEGUERO, ROLES.RESIDENTE), h(ctrl.sync));
+router.post('/sync', verifyToken, verifyRole(ROLES.BODEGUERO, ROLES.RESIDENTE, ROLES.CLIENTE), h(ctrl.sync));
 
 module.exports = router;

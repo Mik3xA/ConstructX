@@ -1,5 +1,6 @@
-export type Rol = 'admin' | 'bodeguero' | 'residente';
-export type TipoMovimiento = 'INGRESO_BODEGA' | 'ENVIO_OBRA' | 'CONSUMO_OBRA';
+export type Rol = 'admin' | 'bodeguero' | 'residente' | 'cliente';
+export type TipoMovimiento = 'INGRESO_BODEGA' | 'ENVIO_OBRA' | 'CONSUMO_OBRA' | 'SALIDA_FLETE';
+export type EstadoPedido = 'PENDIENTE' | 'EN_RUTA' | 'ENTREGADO';
 export type EstadoAlerta = 'ACTIVA' | 'REVISADA' | 'RESUELTA';
 
 export interface Usuario {
@@ -7,6 +8,18 @@ export interface Usuario {
   email: string;
   rol: Rol;
   nombre: string;
+  telefono?: string | null;
+  empresa?: string | null;
+  direccion?: string | null;
+}
+
+export interface RegistroCliente {
+  email: string;
+  password: string;
+  nombre: string;
+  telefono?: string;
+  empresa?: string;
+  direccion?: string;
 }
 
 export interface LoginResponse {
@@ -117,7 +130,79 @@ export interface Alerta {
   updated_at: string;
 }
 
+// ---------- Portal de clientes ----------
+export interface MaterialCatalogo {
+  id: string;
+  codigo_sku: string;
+  nombre: string;
+  unidad: string;
+  categoria: string;
+  descripcion: string | null;
+  precio_unitario: number;
+  imagen_url: string | null;
+  stock_disponible: number;
+}
+
+export interface CatalogoResponse {
+  categorias: string[];
+  materiales: MaterialCatalogo[];
+  tarifa_flete: { base: number; porcentaje: number; gratis_desde: number };
+}
+
+export interface ItemCarrito {
+  material: MaterialCatalogo;
+  cantidad: number;
+}
+
+export interface Cotizacion {
+  subtotal: number;
+  costo_flete: number;
+  total_pagar: number;
+  faltantes: Array<{ material_id: string; material_nombre: string; solicitado: number; disponible: number }>;
+}
+
+export interface DetallePedido {
+  id: string;
+  material_id: string;
+  material_nombre: string;
+  codigo_sku: string;
+  unidad: string;
+  imagen_url: string | null;
+  cantidad: number;
+  precio_unitario: number;
+  subtotal: number;
+}
+
+export interface Pedido {
+  uuid: string;
+  cliente_id: string;
+  cliente_nombre: string;
+  cliente_email?: string;
+  cliente_empresa?: string | null;
+  subtotal: number;
+  costo_flete: number;
+  total_pagar: number;
+  estado: EstadoPedido;
+  direccion_entrega: string;
+  telefono_contacto: string | null;
+  notas: string | null;
+  recibo_enviado_at: string | null;
+  timestamp: string;
+  updated_at: string;
+  total_lineas?: number;
+  detalles?: DetallePedido[];
+  duplicado?: boolean;
+  actualizado_por?: string;
+}
+
 export interface DashboardResumen {
+  comercial: {
+    pedidos_pendientes: number;
+    pedidos_en_ruta: number;
+    ventas_mes: number;
+    pedidos_hoy: number;
+  };
+  pedidos_recientes: Pedido[];
   kpis: {
     proyectos_activos: number;
     alertas_activas: number;

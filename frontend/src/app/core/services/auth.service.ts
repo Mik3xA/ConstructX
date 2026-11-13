@@ -3,16 +3,17 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { API_URL } from '../api.config';
-import { LoginResponse, Rol, Usuario } from '../models/models';
+import { LoginResponse, RegistroCliente, Rol, Usuario } from '../models/models';
 
-const TOKEN_KEY = 'bs_token';
-const USER_KEY = 'bs_user';
+const TOKEN_KEY = 'cx_token';
+const USER_KEY = 'cx_user';
 
 /** Ruta de inicio según rol. */
 export const HOME_POR_ROL: Record<Rol, string> = {
   admin: '/dashboard',
   bodeguero: '/bodega',
   residente: '/campo',
+  cliente: '/catalogo',
 };
 
 @Injectable({ providedIn: 'root' })
@@ -29,31 +30,63 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  /** Respaldo en memoria si localStorage no está disponible (modo privado estricto). */
+  private tokenEnMemoria: string | null = null;
+
   get token(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    try {
+      return localStorage.getItem(TOKEN_KEY) ?? this.tokenEnMemoria;
+    } catch {
+      return this.tokenEnMemoria;
+    }
+  }
+
+  private guardarSesion({ token, user }: LoginResponse): void {
+    this.tokenEnMemoria = token;
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } catch {
+      /* se mantiene solo en memoria */
+    }
+    this.userSubject.next(user);
   }
 
   login(email: string, password: string): Observable<Usuario> {
-    return this.http.post<LoginResponse>(`${this.api}/auth/login`, { email, password }).pipe(
-      tap(({ token, user }) => {
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-        this.userSubject.next(user);
-      }),
-      map(({ user }) => user),
-    );
+    return this.http
+      .post<LoginResponse>(`${this.api}/auth/login`, { email, password })
+      .pipe(tap((r) => this.guardarSesion(r)), map(({ user }) => user));
+  }
+
+  /** Alta pública de clientes del portal. Inicia sesión automáticamente. */
+  registrar(datos: RegistroCliente): Observable<Usuario> {
+    return this.http
+      .post<LoginResponse>(`${this.api}/auth/registro`, datos)
+      .pipe(tap((r) => this.guardarSesion(r)), map(({ user }) => user));
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+    } catch {
+      /* almacenamiento no disponible */
+    }
+    this.tokenEnMemoria = null;
     this.userSubject.next(null);
     this.router.navigateByUrl('/login');
   }
 
+  /** El admin pasa siempre (igual que verifyRole en el backend). */
   hasRole(...roles: Rol[]): boolean {
     const u = this.user;
     return !!u && (u.rol === 'admin' || roles.includes(u.rol));
+  }
+
+  /** Coincidencia exacta de rol (sin el comodín de admin). Útil para menús. */
+  esRol(...roles: Rol[]): boolean {
+    const u = this.user;
+    return !!u && roles.includes(u.rol);
   }
 
   homeUrl(): string {

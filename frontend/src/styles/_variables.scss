@@ -1,54 +1,22 @@
 // =============================================================
-//  BuildSync ERP — Paleta oficial (ESTRICTA)
-//  Azul = primario/confianza · Naranja = alertas/acento
-//  Negro/Carbón = fondos · Blanco = texto/contraste
-//  No agregar colores fuera de esta paleta (ver docs/agents.md).
+//  ConstructX — Tokens no cromáticos (SCSS)
+//  Los COLORES viven como variables CSS en _theme.scss para que
+//  cambien en tiempo real entre Light y Dark mode.
 // =============================================================
-
-// Negro / Carbón (fondos)
-$charcoal-950: #07080a;
-$charcoal-900: #0b0d10;
-$charcoal-850: #101318;
-$charcoal-800: #151920;
-$charcoal-700: #1d222b;
-$charcoal-600: #2a303b;
-
-// Blanco (texto y contraste)
-$white: #ffffff;
-$white-80: rgba(255, 255, 255, 0.8);
-$white-60: rgba(255, 255, 255, 0.6);
-$white-40: rgba(255, 255, 255, 0.4);
-$white-12: rgba(255, 255, 255, 0.12);
-$white-08: rgba(255, 255, 255, 0.08);
-$white-04: rgba(255, 255, 255, 0.04);
-
-// Azul (primario)
-$blue-300: #93c5fd;
-$blue-400: #60a5fa;
-$blue-500: #3b82f6;
-$blue-600: #2563eb;
-$blue-700: #1d4ed8;
-$blue-glow: rgba(59, 130, 246, 0.25);
-
-// Naranja (acento / peligro)
-$orange-300: #fdba74;
-$orange-400: #fb923c;
-$orange-500: #f97316;
-$orange-600: #ea580c;
-$orange-glow: rgba(249, 115, 22, 0.25);
 
 // Tipografía
 $font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+$font-display: 'Manrope', 'Inter', system-ui, sans-serif;
 $font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-// Espaciado y forma
-$radius-sm: 6px;
-$radius: 10px;
-$radius-lg: 16px;
-$border: 1px solid $white-08;
-$sidebar-width: 248px;
-$transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+// Forma
+$radius-sm: 8px;
+$radius: 12px;
+$radius-lg: 18px;
+$sidebar-width: 252px;
+$transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
 
 // Breakpoints
 $bp-md: 768px;
 $bp-lg: 1100px;
+$bp-xl: 1440px;

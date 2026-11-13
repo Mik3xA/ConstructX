@@ -10,20 +10,64 @@ const MaterialModel = {
     return db.prepare('SELECT * FROM catalogo_materiales WHERE id = ?').get(id);
   },
 
+  /** Catálogo comercial para el portal de clientes (con precio, imagen y stock disponible). */
+  catalogo({ categoria, q } = {}) {
+    const where = ['m.activo = 1'];
+    const params = {};
+    if (categoria) { where.push('m.categoria = @categoria'); params.categoria = categoria; }
+    if (q) { where.push('(m.nombre LIKE @q OR m.codigo_sku LIKE @q OR m.descripcion LIKE @q)'); params.q = `%${q}%`; }
+    return db
+      .prepare(
+        `SELECT m.id, m.codigo_sku, m.nombre, m.unidad, m.categoria, m.descripcion,
+                m.precio_unitario, m.imagen_url, COALESCE(i.stock_actual, 0) AS stock_disponible
+         FROM catalogo_materiales m
+         LEFT JOIN inventario_central i ON i.material_id = m.id
+         WHERE ${where.join(' AND ')}
+         ORDER BY m.categoria, m.nombre`
+      )
+      .all(params);
+  },
+
+  categorias() {
+    return db
+      .prepare('SELECT DISTINCT categoria FROM catalogo_materiales WHERE activo = 1 ORDER BY categoria')
+      .all()
+      .map((r) => r.categoria);
+  },
+
   /** Crea el material y su registro de inventario en 0. */
-  create({ codigo_sku, nombre, unidad }) {
+  create({ codigo_sku, nombre, unidad, categoria = 'General', descripcion = null, precio_unitario = 0, imagen_url = null }) {
     const id = randomUUID();
     const t = ahora();
     db.transaction(() => {
       db.prepare(
-        `INSERT INTO catalogo_materiales (id, codigo_sku, nombre, unidad, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      ).run(id, codigo_sku, nombre, unidad, t, t);
+        `INSERT INTO catalogo_materiales
+           (id, codigo_sku, nombre, unidad, categoria, descripcion, precio_unitario, imagen_url, activo, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
+      ).run(id, codigo_sku, nombre, unidad, categoria, descripcion, precio_unitario, imagen_url, t, t);
       db.prepare(
         `INSERT INTO inventario_central (id, material_id, stock_actual, created_at, updated_at)
          VALUES (?, ?, 0, ?, ?)`
       ).run(randomUUID(), id, t, t);
     })();
+    return this.findById(id);
+  },
+
+  update(id, campos) {
+    const actual = this.findById(id);
+    if (!actual) return null;
+    const m = { ...actual };
+    for (const k of ['nombre', 'unidad', 'categoria', 'descripcion', 'precio_unitario', 'imagen_url']) {
+      if (k in campos) m[k] = campos[k];
+    }
+    if ('activo' in campos) m.activo = campos.activo ? 1 : 0;
+    m.precio_unitario = Number(m.precio_unitario);
+    db.prepare(
+      `UPDATE catalogo_materiales SET nombre = @nombre, unidad = @unidad, categoria = @categoria,
+              descripcion = @descripcion, precio_unitario = @precio_unitario, imagen_url = @imagen_url,
+              activo = @activo, updated_at = @updated_at WHERE id = @id`
+    ).run({ id, nombre: m.nombre, unidad: m.unidad, categoria: m.categoria, descripcion: m.descripcion,
+            precio_unitario: m.precio_unitario, imagen_url: m.imagen_url, activo: m.activo, updated_at: ahora() });
     return this.findById(id);
   },
 

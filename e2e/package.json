@@ -1,0 +1,13 @@
+{
+  "name": "constructx-e2e",
+  "private": true,
+  "description": "Pruebas end-to-end de ConstructX (Playwright). Levanta backend y frontend automáticamente.",
+  "scripts": {
+    "test": "playwright test --trace off",
+    "test:ui": "playwright test --ui",
+    "instalar-navegador": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

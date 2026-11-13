@@ -4,6 +4,7 @@
  * PUSH: el cliente envía lo que generó sin conexión.
  *   - movimientos:  upsert por uuid (idempotente; los existentes se reportan como duplicados).
  *   - fases_avance: last-write-wins por updated_at.
+ *   - pedidos:      pedidos de flete creados offline por un Cliente (idempotentes por uuid).
  * PULL: el servidor devuelve todo lo que cambió después de `last_sync`.
  *
  * Cada elemento se procesa de forma independiente: un error en uno no bloquea al resto.
@@ -16,6 +17,8 @@ const ProyectoModel = require('../modelos/proyecto.model');
 const MaterialModel = require('../modelos/material.model');
 const MovimientoModel = require('../modelos/movimiento.model');
 const AlertaModel = require('../modelos/alerta.model');
+const PedidoModel = require('../modelos/pedido.model');
+const pedidosService = require('./pedidos.service');
 const { ROLES } = require('../middlewares/auth.middleware');
 const { HttpError } = require('../middlewares/error.middleware');
 
@@ -28,11 +31,11 @@ function normalizarLastSync(last_sync) {
   return d.toISOString();
 }
 
-function sincronizar({ last_sync, movimientos = [], fases_avance = [] }, usuario) {
-  if (!Array.isArray(movimientos) || !Array.isArray(fases_avance)) {
-    throw new HttpError(400, 'movimientos y fases_avance deben ser arreglos');
+function sincronizar({ last_sync, movimientos = [], fases_avance = [], pedidos = [] }, usuario) {
+  if (!Array.isArray(movimientos) || !Array.isArray(fases_avance) || !Array.isArray(pedidos)) {
+    throw new HttpError(400, 'movimientos, fases_avance y pedidos deben ser arreglos');
   }
-  if (movimientos.length + fases_avance.length > MAX_LOTE) {
+  if (movimientos.length + fases_avance.length + pedidos.length > MAX_LOTE) {
     throw new HttpError(413, `El lote excede ${MAX_LOTE} elementos`);
   }
 
@@ -43,6 +46,7 @@ function sincronizar({ last_sync, movimientos = [], fases_avance = [] }, usuario
   const resultado = {
     movimientos: { aplicados: [], duplicados: [], rechazados: [] },
     fases_avance: { aplicados: [], ignorados: [], rechazados: [] },
+    pedidos: { aplicados: [], duplicados: [], rechazados: [] },
   };
 
   for (const m of movimientos) {
@@ -67,9 +71,35 @@ function sincronizar({ last_sync, movimientos = [], fases_avance = [] }, usuario
     }
   }
 
+  for (const p of pedidos) {
+    try {
+      if (usuario.rol !== ROLES.CLIENTE && usuario.rol !== ROLES.ADMIN) {
+        throw new HttpError(403, `El rol '${usuario.rol}' no puede crear pedidos de flete`);
+      }
+      if (!p || !p.uuid) throw new HttpError(400, 'Cada pedido sincronizado debe traer su uuid');
+      const { duplicado } = pedidosService.crear(usuario, p);
+      resultado.pedidos[duplicado ? 'duplicados' : 'aplicados'].push(p.uuid);
+    } catch (e) {
+      resultado.pedidos.rechazados.push({ uuid: p && p.uuid, status: e.status || 500, error: e.message, details: e.details });
+    }
+  }
+
   if (resultado.movimientos.aplicados.length) alertasService.auditar();
 
+  // El cliente solo descarga el catálogo y SUS pedidos (nunca datos internos de obra).
+  if (usuario.rol === ROLES.CLIENTE) {
+    return {
+      server_time,
+      resultado,
+      cambios: {
+        catalogo_materiales: MaterialModel.cambiosDesde(desde).catalogo_materiales,
+        pedidos_fletes: PedidoModel.cambiosDesde(desde, usuario.id),
+      },
+    };
+  }
+
   const cambios = {
+    pedidos_fletes: PedidoModel.cambiosDesde(desde),
     ...ProyectoModel.cambiosDesde(desde),
     ...MaterialModel.cambiosDesde(desde),
     movimientos: MovimientoModel.cambiosDesde(desde),

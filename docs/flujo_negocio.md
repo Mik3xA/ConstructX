@@ -1,6 +1,6 @@
 # Flujo de Negocio y Ciclo de Vida de Materiales
 
-Este documento explica cómo viajan los datos en **BuildSync ERP** para que el equipo de desarrollo entienda el "por qué" de las tablas y los endpoints.
+Este documento explica cómo viajan los datos en **ConstructX** para que el equipo de desarrollo entienda el "por qué" de las tablas y los endpoints.
 
 ```
  [Admin]                 [Bodeguero]                     [Residente]               [Auditor]
@@ -66,8 +66,36 @@ El sistema dispara una notificación color **Naranja** al panel del Admin:
 
 Las alertas se persisten en la tabla `alertas` (una alerta activa por tarea × material). Si la desviación vuelve a estar dentro de la tolerancia (p. ej. porque se reportó más avance), la alerta pasa a estado `RESUELTA` automáticamente. El Admin también puede marcarla como `REVISADA`.
 
-## 6. Sincronización Offline-First (futuro Flutter)
+## 6. Portal de Clientes: Pedido de Flete
+
+```
+ [Cliente]                         [Backend]                                   [Admin / Bodeguero]
+ Catálogo ─► Carrito ─► Cotizar ─► POST /pedidos/cotizar (no guarda nada)
+                      ─► Confirmar ─► POST /pedidos
+                                     ┌─ TRANSACCIÓN ─────────────────────────┐
+                                     │ 1. ¿stock_actual ≥ cantidad? (todas)   │──✗──► 409, no se toca nada
+                                     │ 2. inventario_central −= cantidad      │
+                                     │ 3. INSERT pedidos_fletes (PENDIENTE)    │
+                                     │ 4. INSERT detalles_pedido              │
+                                     │ 5. INSERT movimientos SALIDA_FLETE     │
+                                     └────────────────────────────────────────┘
+                                     ─► Socket.io `nuevo_flete`  ─────────────► Toast + tabla en vivo
+                                     ─► Nodemailer: recibo HTML al cliente
+                                                     Bodega: Despachar ─► EN_RUTA ─► ENTREGADO
+ Mis pedidos ◄── `flete_actualizado` ◄────────────────────────────────────────┘
+```
+
+1. **Catálogo visual:** el cliente ve materiales con foto, precio unitario (MXN sin IVA) y existencias.
+2. **Cotización:** el carrito pide al servidor la cotización oficial. Los precios **siempre** salen de `catalogo_materiales`; lo que muestre el navegador es solo una vista previa.
+3. **Costo del flete:** `base ($450) + 3% del subtotal`, **gratis** desde $25,000 (configurable en `.env`).
+4. **Confirmación:** el motor de pedidos ejecuta todo en una transacción. Si alguna línea no tiene stock suficiente, responde 409 con la lista de `faltantes` y no descuenta nada.
+5. **Trazabilidad:** cada línea genera un movimiento `SALIDA_FLETE` (con `pedido_id`) en el mismo libro que los ingresos y consumos de obra.
+6. **Tiempo real:** tras el commit se emite `nuevo_flete` a las salas `rol:admin` y `rol:bodeguero`. Su panel muestra un toast y la fila nueva sin recargar.
+7. **Recibo por email:** se envía después del commit. Si el correo falla, el pedido **no** se revierte (queda `recibo_enviado_at = NULL`).
+8. **Seguimiento:** el bodeguero avanza el estado (`PENDIENTE → EN_RUTA → ENTREGADO`, nunca hacia atrás). El cliente recibe `flete_actualizado` en su sala personal.
+
+## 7. Sincronización Offline-First (futuro Flutter)
 
 - Todo `movimiento` se identifica por un **UUIDv4 generado en el cliente**. Reenviar el mismo UUID es idempotente: el servidor no lo vuelve a aplicar sobre el stock.
 - Todas las tablas tienen `created_at` / `updated_at` (ISO-8601 UTC) para que el cliente pida "cambios desde `last_sync`".
-- `POST /api/sync` acepta un lote de movimientos y actualizaciones de avance, y devuelve los cambios del servidor posteriores a `last_sync` junto con un nuevo `server_time`.
+- `POST /api/sync` acepta un lote de movimientos, actualizaciones de avance y pedidos de flete (clientes), y devuelve los cambios del servidor posteriores a `last_sync` junto con un nuevo `server_time`.

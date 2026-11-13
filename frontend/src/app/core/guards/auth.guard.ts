@@ -24,3 +24,9 @@ export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   return auth.user ? inject(Router).createUrlTree([auth.homeUrl()]) : true;
 };
+
+/** Redirige la raíz a la pantalla de inicio del rol (cliente -> catálogo, admin -> dashboard...). */
+export const homeGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  return inject(Router).createUrlTree([auth.homeUrl()]);
+};

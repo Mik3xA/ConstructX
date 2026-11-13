@@ -17,6 +17,7 @@ app.use('/api', require('./rutas/proyectos.routes'));
 app.use('/api', require('./rutas/inventario.routes'));
 app.use('/api', require('./rutas/alertas.routes'));
 app.use('/api', require('./rutas/sync.routes'));
+app.use('/api', require('./rutas/pedidos.routes'));
 
 app.use(notFound);
 app.use(errorHandler);

@@ -1,7 +1,8 @@
 /* =============================================================
-   BuildSync ERP — Estilos globales
-   Paleta estricta: Azul (primario) · Naranja (alertas)
-                    Negro/Carbón (fondos) · Blanco (texto)
+   ConstructX — Estilos globales
+   Tema Light (cálido) / Dark (matte) con variables CSS:
+   var(--bg-color), var(--surface), var(--text), var(--primary-orange)...
    ============================================================= */
+@use 'styles/theme';
 @use 'styles/base';
 @use 'styles/components';

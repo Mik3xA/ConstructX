@@ -1,18 +1,6 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// ---------- CSS custom properties (para uso en componentes) ----------
-:root {
-  --bs-bg: #{$charcoal-900};
-  --bs-surface: #{$charcoal-800};
-  --bs-border: #{$white-08};
-  --bs-text: #{$white};
-  --bs-muted: #{$white-60};
-  --bs-primary: #{$blue-500};
-  --bs-accent: #{$orange-500};
-  color-scheme: dark;
-}
-
 *,
 *::before,
 *::after {
@@ -29,15 +17,16 @@ body {
 }
 
 body {
-  background: $charcoal-900;
-  color: $white;
+  background: var(--bg-color);
+  color: var(--text);
   font-family: $font-sans;
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 250ms ease, color 250ms ease;
 }
 
-bs-root {
+cx-root {
   display: block;
   height: 100%;
 }
@@ -47,20 +36,26 @@ h2,
 h3,
 h4 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: $font-display;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 a {
-  color: $blue-400;
+  color: var(--primary-orange);
   text-decoration: none;
   &:hover {
-    color: $blue-300;
+    color: var(--primary-orange-hover);
   }
 }
 
+img {
+  max-width: 100%;
+  display: block;
+}
+
 ::selection {
-  background: $blue-glow;
+  background: color-mix(in srgb, var(--primary-orange) 25%, transparent);
 }
 
 ::-webkit-scrollbar {
@@ -68,9 +63,18 @@ a {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: $charcoal-600;
+  background: var(--border-strong);
   border-radius: 10px;
-  border: 2px solid $charcoal-900;
+  border: 2px solid var(--bg-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .mono {
@@ -83,13 +87,22 @@ a {
 }
 
 .muted {
-  color: $white-60;
-}
-
-.text-accent {
-  color: $orange-400;
+  color: var(--text-muted);
 }
 
 .text-primary {
-  color: $blue-400;
+  color: var(--primary-orange);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }

@@ -1,22 +1,60 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
+// ---------- Página ----------
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem 2rem;
+  min-height: 100%;
+
+  @include md {
+    padding: 2rem 2.5rem 3rem;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    h1 {
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      margin-top: 0.2rem;
+    }
+    p {
+      margin: 0.3rem 0 0;
+      color: var(--text-muted);
+    }
+  }
+}
+
 // ---------- Botones ----------
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 40px;
-  padding: 0 1.1rem;
+  height: 42px;
+  padding: 0 1.15rem;
   border-radius: $radius;
   border: 1px solid transparent;
   font: inherit;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background $transition, border-color $transition, transform $transition, box-shadow $transition;
+  text-decoration: none;
+  transition: background $transition, border-color $transition, transform $transition, box-shadow $transition,
+    color $transition;
   white-space: nowrap;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -25,47 +63,63 @@
     @include focus-ring;
   }
   &:disabled {
-    opacity: 0.45;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
   &--primary {
-    background: $blue-600;
-    color: $white;
+    background: var(--primary-orange);
+    color: var(--on-primary);
     &:hover:not(:disabled) {
-      background: $blue-500;
-      box-shadow: 0 8px 24px $blue-glow;
+      background: var(--primary-orange-hover);
+      color: var(--on-primary);
+      box-shadow: 0 8px 22px color-mix(in srgb, var(--primary-orange) 30%, transparent);
     }
   }
 
-  &--warning {
-    background: $orange-500;
-    color: $charcoal-950;
+  &--soft {
+    background: var(--primary-soft);
+    color: var(--primary-orange);
     &:hover:not(:disabled) {
-      background: $orange-400;
-      box-shadow: 0 8px 24px $orange-glow;
+      background: color-mix(in srgb, var(--primary-orange) 18%, var(--surface));
+      color: var(--primary-orange);
     }
-    &:focus-visible {
-      @include focus-ring($orange-500);
+  }
+
+  &--danger {
+    background: var(--danger);
+    color: var(--surface);
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--danger) 85%, var(--text));
+      color: var(--surface);
     }
   }
 
   &--ghost {
-    background: transparent;
-    color: $white-80;
-    border-color: $white-12;
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--border-strong);
     &:hover:not(:disabled) {
-      background: $white-04;
-      color: $white;
+      background: var(--surface-hover);
+      color: var(--text);
     }
   }
 
+  &--icon {
+    width: 42px;
+    padding: 0;
+  }
   &--block {
     width: 100%;
   }
   &--lg {
-    height: 48px;
+    height: 50px;
     font-size: 1rem;
+  }
+  &--sm {
+    height: 34px;
+    padding: 0 0.8rem;
+    font-size: 0.82rem;
   }
 }
 
@@ -81,33 +135,41 @@
 }
 
 .input,
-.select {
-  height: 44px;
+.select,
+.textarea {
   width: 100%;
   padding: 0 0.9rem;
-  background: $charcoal-900;
-  color: $white;
-  border: 1px solid $white-12;
+  height: 44px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
   border-radius: $radius;
   font: inherit;
   transition: border-color $transition, box-shadow $transition;
 
   &::placeholder {
-    color: $white-40;
+    color: var(--text-faint);
   }
   &:focus {
-    border-color: $blue-500;
+    border-color: var(--primary-orange);
     @include focus-ring;
   }
   &.ng-invalid.ng-touched {
-    border-color: $orange-500;
+    border-color: var(--danger);
   }
+}
+
+.textarea {
+  height: auto;
+  min-height: 84px;
+  padding: 0.7rem 0.9rem;
+  resize: vertical;
 }
 
 .select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, $white-60 50%),
-    linear-gradient(135deg, $white-60 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
   background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px;
   background-size: 5px 5px;
   background-repeat: no-repeat;
@@ -116,37 +178,56 @@
 
 input[type='range'] {
   width: 100%;
-  accent-color: $blue-500;
+  accent-color: var(--primary-orange);
 }
 
 // ---------- Tarjetas ----------
 .card {
   @include card;
   padding: 1.25rem;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+
+    h2 {
+      font-size: 1.08rem;
+    }
+  }
 }
 
-// ---------- Chips / Badges ----------
+// ---------- Chips ----------
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border: $border;
-  color: $white-80;
-  background: $white-04;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--accent-gray);
+  background: var(--accent-gray-soft);
 
-  &--blue {
-    color: $blue-300;
-    background: rgba($blue-500, 0.12);
-    border-color: rgba($blue-500, 0.3);
-  }
   &--orange {
-    color: $orange-300;
-    background: rgba($orange-500, 0.12);
-    border-color: rgba($orange-500, 0.35);
+    color: var(--primary-orange);
+    background: var(--primary-soft);
+  }
+  &--amber {
+    color: var(--accent-amber);
+    background: var(--accent-amber-soft);
+  }
+  &--olive {
+    color: var(--accent-olive);
+    background: var(--accent-olive-soft);
+  }
+  &--danger {
+    color: var(--danger);
+    background: var(--danger-soft);
   }
 }
 
@@ -162,17 +243,31 @@ input[type='range'] {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba($orange-500, 0.6);
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba($orange-500, 0);
+    box-shadow: 0 0 0 8px transparent;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba($orange-500, 0);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes fila-nueva {
+  from {
+    background: var(--primary-soft);
+  }
+  to {
+    background: transparent;
   }
 }
 
 // ---------- Tablas ----------
+.table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -180,21 +275,31 @@ input[type='range'] {
 
   th {
     @include eyebrow;
+    font-size: 0.68rem;
     text-align: left;
     padding: 0.6rem 0.75rem;
-    border-bottom: $border;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
   }
   td {
     padding: 0.75rem;
-    border-bottom: 1px solid $white-04;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
   }
-  tr:hover td {
-    background: $white-04;
+  tbody tr {
+    transition: background $transition;
+    &:hover {
+      background: var(--surface-2);
+    }
+    &.is-new {
+      animation: fila-nueva 2.5s ease-out;
+    }
   }
   .num {
     text-align: right;
     font-family: $font-mono;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 }
 
@@ -203,16 +308,56 @@ input[type='range'] {
   padding: 0.75rem 1rem;
   border-radius: $radius;
   font-size: 0.9rem;
-  border: 1px solid;
 
   &--error {
-    color: $orange-300;
-    border-color: rgba($orange-500, 0.4);
-    background: rgba($orange-500, 0.08);
+    color: var(--danger);
+    background: var(--danger-soft);
   }
   &--ok {
-    color: $blue-300;
-    border-color: rgba($blue-500, 0.4);
-    background: rgba($blue-500, 0.08);
+    color: var(--accent-olive);
+    background: var(--accent-olive-soft);
+  }
+  &--info {
+    color: var(--accent-amber);
+    background: var(--accent-amber-soft);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+
+  svg {
+    width: 44px;
+    height: 44px;
+    color: var(--text-faint);
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-hover) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+  border-radius: $radius;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
   }
 }

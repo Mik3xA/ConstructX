@@ -15,6 +15,7 @@ const { randomUUID } = require('crypto');
 const { db, ahora } = require('../config/database');
 const AlertaModel = require('../modelos/alerta.model');
 const { ALERTA_TOLERANCIA } = require('../config/env');
+const socketService = require('./socket.service');
 
 const redondear = (n) => Math.round(n * 100) / 100;
 
@@ -106,6 +107,7 @@ function auditar(filtro = {}) {
     }
   })();
 
+  for (const a of nuevas) socketService.emitir(socketService.SALAS.ADMIN, 'alerta_naranja', a);
   return { activas, nuevas };
 }
 

@@ -1,0 +1,220 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.login {
+  display: grid;
+  height: 100dvh;
+  width: 100%;
+  overflow-y: auto;
+
+  @include lg {
+    grid-template-columns: 1.15fr 1fr;
+    overflow: hidden;
+  }
+}
+
+// ---------- Hero ----------
+.hero {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  color: #fbf6ef;
+  background: radial-gradient(900px 600px at 110% 110%, rgba(226, 96, 15, 0.55), transparent 60%),
+    radial-gradient(700px 500px at -10% -10%, rgba(183, 128, 31, 0.35), transparent 60%), #1e1b18;
+
+  @include lg {
+    display: flex;
+    align-items: center;
+  }
+
+  &__grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(circle at 30% 50%, black, transparent 75%);
+  }
+
+  &__copy {
+    position: relative;
+    padding: 4rem;
+    max-width: 640px;
+
+    h1 {
+      font-size: clamp(2.4rem, 3.6vw, 3.6rem);
+      line-height: 1.05;
+      margin: 2rem 0 1.25rem;
+      letter-spacing: -0.035em;
+      span {
+        color: #f59a5c;
+      }
+    }
+    p {
+      color: rgba(251, 246, 239, 0.75);
+      font-size: 1.08rem;
+      max-width: 480px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 2rem 0 0;
+      display: grid;
+      gap: 0.6rem;
+      li {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        color: rgba(251, 246, 239, 0.8);
+        &::before {
+          content: '';
+          width: 18px;
+          height: 2px;
+          background: #f59a5c;
+        }
+        b {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  &__logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: $font-display;
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    b {
+      color: #f59a5c;
+    }
+  }
+}
+
+// ---------- Panel ----------
+.panel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 4.5rem 1rem 2rem;
+  background: var(--bg-color);
+
+  @include lg {
+    overflow-y: auto;
+  }
+}
+
+.theme-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  &:hover {
+    color: var(--primary-orange);
+  }
+}
+
+.form-wrap {
+  width: 100%;
+  max-width: 440px;
+  @include card;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+
+  @include md {
+    padding: 2rem;
+  }
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  background: var(--bg-subtle);
+  border-radius: $radius;
+
+  button {
+    height: 38px;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+
+    &.is-active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+
+  h2 {
+    font-size: 1.5rem;
+  }
+  p {
+    margin: 0.3rem 0 0;
+  }
+}
+
+.grid2 {
+  display: grid;
+  gap: 1rem;
+  @include md {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.demo {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chip {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    &:hover {
+      color: var(--primary-orange);
+      background: var(--primary-soft);
+    }
+  }
+}

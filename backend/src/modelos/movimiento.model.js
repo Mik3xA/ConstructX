@@ -1,6 +1,6 @@
 const { db } = require('../config/database');
 
-const TIPOS = Object.freeze(['INGRESO_BODEGA', 'ENVIO_OBRA', 'CONSUMO_OBRA']);
+const TIPOS = Object.freeze(['INGRESO_BODEGA', 'ENVIO_OBRA', 'CONSUMO_OBRA', 'SALIDA_FLETE']);
 
 const MovimientoModel = {
   TIPOS,
@@ -12,10 +12,10 @@ const MovimientoModel = {
   insert(m) {
     db.prepare(
       `INSERT INTO movimientos
-         (uuid, proyecto_id, tarea_id, material_id, cantidad, tipo, usuario_id, timestamp, created_at, updated_at)
+         (uuid, proyecto_id, tarea_id, pedido_id, material_id, cantidad, tipo, usuario_id, timestamp, created_at, updated_at)
        VALUES
-         (@uuid, @proyecto_id, @tarea_id, @material_id, @cantidad, @tipo, @usuario_id, @timestamp, @created_at, @updated_at)`
-    ).run(m);
+         (@uuid, @proyecto_id, @tarea_id, @pedido_id, @material_id, @cantidad, @tipo, @usuario_id, @timestamp, @created_at, @updated_at)`
+    ).run({ proyecto_id: null, tarea_id: null, pedido_id: null, ...m });
     return this.findByUuid(m.uuid);
   },
 

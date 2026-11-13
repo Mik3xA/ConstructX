@@ -1,21 +1,47 @@
 <div class="shell">
   <aside class="sidebar">
-    <div class="brand">
-      <img src="assets/logo.svg" alt="" width="32" height="32" />
-      <div>
-        <strong>BuildSync</strong>
-        <span>ERP</span>
-      </div>
-    </div>
+    <a class="brand" routerLink="/">
+      <img src="assets/logo.svg" alt="" width="34" height="34" />
+      <span class="brand__name">Construct<b>X</b></span>
+    </a>
 
-    <nav class="nav">
+    <nav class="nav" aria-label="Principal">
       @for (item of items; track item.ruta) {
-        <a [routerLink]="item.ruta" routerLinkActive="is-active" class="nav__item">
+        <a [routerLink]="item.ruta" routerLinkActive="is-active" class="nav__item" [attr.aria-label]="item.etiqueta">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icono" /></svg>
-          <span>{{ item.etiqueta }}</span>
+          <span class="nav__label">{{ item.etiqueta }}</span>
+          @if (item.badgeCarrito) {
+            @if (carrito.totalPiezas$ | async; as n) {
+              <span class="nav__badge" data-testid="badge-carrito">{{ n }}</span>
+            }
+          }
         </a>
       }
     </nav>
+
+    <div class="tools">
+      <span
+        class="live"
+        [class.is-on]="socket.conectado$ | async"
+        [attr.title]="(socket.conectado$ | async) ? 'Conectado en tiempo real' : 'Sin conexión en tiempo real'"
+      >
+        <span class="dot"></span><span class="live__label">{{ (socket.conectado$ | async) ? 'En vivo' : 'Desconectado' }}</span>
+      </span>
+
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="theme.alternar()"
+        [attr.aria-label]="(theme.tema$ | async) === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        data-testid="toggle-tema"
+      >
+        @if ((theme.tema$ | async) === 'dark') {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+        } @else {
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+        }
+      </button>
+    </div>
 
     @if (auth.user$ | async; as user) {
       <div class="user">
@@ -24,7 +50,7 @@
           <strong>{{ user.nombre }}</strong>
           <span>{{ etiquetaRol[user.rol] }}</span>
         </div>
-        <button class="user__logout" type="button" (click)="auth.logout()" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <button class="icon-btn" type="button" (click)="auth.logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17l5-5-5-5M20 12H9M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" /></svg>
         </button>
       </div>
@@ -35,3 +61,5 @@
     <router-outlet />
   </main>
 </div>
+
+<cx-toast-container />

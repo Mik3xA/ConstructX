@@ -1,0 +1,102 @@
+// =============================================================
+//  ConstructX — Sistema de temas (Light / Dark matte)
+//
+//  - Light es el modo por defecto: fondos blancos y beige cálido.
+//  - Dark se activa automáticamente con `prefers-color-scheme: dark`
+//    salvo que el usuario haya elegido Light con el toggle.
+//  - El toggle fija `<html data-theme="light|dark">` (ThemeService).
+//  - Nunca negro puro (#000): el modo oscuro usa #121212 / #1E1E1E.
+//
+//  Uso en componentes: var(--bg-color), var(--primary-orange), ...
+// =============================================================
+
+@mixin tema-claro {
+  // Superficies
+  --bg-color: #f7f3ed;          // beige muy claro
+  --bg-subtle: #efe9e0;
+  --surface: #ffffff;           // tarjetas en blanco puro
+  --surface-2: #faf7f2;
+  --surface-hover: #f4efe7;
+  --border: #ece5da;            // bordes súper sutiles
+  --border-strong: #ddd3c5;
+
+  // Texto
+  --text: #2a241f;
+  --text-muted: #6f655b;
+  --text-faint: #a0968a;
+
+  // Primario: Naranja Constructivo
+  --primary-orange: #e2600f;
+  --primary-orange-hover: #c9530b;
+  --primary-soft: #fdeee3;
+  --on-primary: #ffffff;
+
+  // Acentos cálidos
+  --accent-amber: #b7801f;      // amarillo tostado
+  --accent-amber-soft: #fbf1dc;
+  --accent-gray: #8c8279;       // gris cálido
+  --accent-gray-soft: #f1ede8;
+  --accent-olive: #66753a;      // estados "completado"
+  --accent-olive-soft: #eef1e2;
+
+  // Alertas (merma / errores)
+  --danger: #b93a0b;
+  --danger-soft: #fde8de;
+
+  --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.06);
+  --shadow: 0 8px 24px rgba(60, 40, 20, 0.08);
+  --shadow-lg: 0 20px 50px rgba(60, 40, 20, 0.14);
+  --overlay: rgba(42, 36, 31, 0.35);
+  color-scheme: light;
+}
+
+@mixin tema-oscuro {
+  // Superficies: gris carbón MATE (nunca #000)
+  --bg-color: #121212;
+  --bg-subtle: #171615;
+  --surface: #1e1e1e;
+  --surface-2: #242220;
+  --surface-hover: #2a2725;
+  --border: #2e2b28;
+  --border-strong: #3c3833;
+
+  // Texto: blanco hueso
+  --text: #f1ece4;
+  --text-muted: #b2a89b;
+  --text-faint: #7e756a;
+
+  --primary-orange: #f07a30;
+  --primary-orange-hover: #f48c48;
+  --primary-soft: #3a2518;
+  --on-primary: #1b120b;
+
+  --accent-amber: #ddb054;
+  --accent-amber-soft: #352b17;
+  --accent-gray: #a69c91;
+  --accent-gray-soft: #2b2826;
+  --accent-olive: #a9b873;
+  --accent-olive-soft: #262a1b;
+
+  --danger: #ff8a5c;
+  --danger-soft: #3d2016;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --overlay: rgba(8, 8, 8, 0.6);
+  color-scheme: dark;
+}
+
+:root {
+  @include tema-claro;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include tema-oscuro;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include tema-oscuro;
+}

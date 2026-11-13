@@ -2,15 +2,25 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>BuildSync ERP</title>
+  <title>ConstructX</title>
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0b0d10" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f7f3ed" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <script>
+    // Aplica el tema guardado ANTES de que Angular arranque (evita parpadeo).
+    try {
+      var t = localStorage.getItem('cx_theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
 </head>
 <body>
-  <bs-root></bs-root>
+  <cx-root></cx-root>
 </body>
 </html>

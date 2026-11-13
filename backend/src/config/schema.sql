@@ -1,5 +1,5 @@
 -- =============================================================
--- BuildSync ERP - Esquema SQLite
+-- ConstructX - Esquema SQLite (ERP de obra + Portal de Clientes)
 -- Todas las fechas en ISO-8601 UTC (TEXT).
 -- Los IDs son UUIDv4 (TEXT) para compatibilidad offline-first.
 -- =============================================================
@@ -10,8 +10,11 @@ CREATE TABLE IF NOT EXISTS users (
   id             TEXT PRIMARY KEY,
   email          TEXT NOT NULL UNIQUE COLLATE NOCASE,
   password_hash  TEXT NOT NULL,
-  rol            TEXT NOT NULL CHECK (rol IN ('admin', 'bodeguero', 'residente')),
+  rol            TEXT NOT NULL CHECK (rol IN ('admin', 'bodeguero', 'residente', 'cliente')),
   nombre         TEXT NOT NULL,
+  telefono       TEXT,
+  empresa        TEXT,
+  direccion      TEXT,
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL
 );
@@ -51,9 +54,14 @@ CREATE INDEX IF NOT EXISTS idx_tareas_fase ON tareas(fase_id);
 
 CREATE TABLE IF NOT EXISTS catalogo_materiales (
   id          TEXT PRIMARY KEY,
-  codigo_sku  TEXT NOT NULL UNIQUE,
-  nombre      TEXT NOT NULL,
-  unidad      TEXT NOT NULL,
+  codigo_sku      TEXT NOT NULL UNIQUE,
+  nombre          TEXT NOT NULL,
+  unidad          TEXT NOT NULL,
+  categoria       TEXT NOT NULL DEFAULT 'General',
+  descripcion     TEXT,
+  precio_unitario REAL NOT NULL DEFAULT 0 CHECK (precio_unitario >= 0),  -- MXN, sin IVA
+  imagen_url      TEXT,
+  activo          INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),   -- visible en el catálogo
   created_at  TEXT NOT NULL,
   updated_at  TEXT NOT NULL
 );
@@ -76,6 +84,39 @@ CREATE TABLE IF NOT EXISTS inventario_central (
   updated_at    TEXT NOT NULL
 );
 
+-- Pedidos de flete hechos por Clientes desde el portal. PK = UUIDv4 (idempotencia).
+CREATE TABLE IF NOT EXISTS pedidos_fletes (
+  uuid               TEXT PRIMARY KEY,
+  cliente_id         TEXT NOT NULL REFERENCES users(id),
+  subtotal           REAL NOT NULL CHECK (subtotal >= 0),
+  costo_flete        REAL NOT NULL CHECK (costo_flete >= 0),
+  total_pagar        REAL NOT NULL CHECK (total_pagar >= 0),
+  estado             TEXT NOT NULL DEFAULT 'PENDIENTE'
+                     CHECK (estado IN ('PENDIENTE', 'EN_RUTA', 'ENTREGADO')),
+  direccion_entrega  TEXT NOT NULL,
+  telefono_contacto  TEXT,
+  notas              TEXT,
+  recibo_enviado_at  TEXT,               -- cuándo se envió el recibo por email
+  timestamp          TEXT NOT NULL,      -- momento del pedido (reloj del cliente)
+  created_at         TEXT NOT NULL,
+  updated_at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_pedidos_cliente ON pedidos_fletes(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_pedidos_estado ON pedidos_fletes(estado);
+CREATE INDEX IF NOT EXISTS idx_pedidos_updated ON pedidos_fletes(updated_at);
+
+CREATE TABLE IF NOT EXISTS detalles_pedido (
+  id               TEXT PRIMARY KEY,
+  pedido_id        TEXT NOT NULL REFERENCES pedidos_fletes(uuid) ON DELETE CASCADE,
+  material_id      TEXT NOT NULL REFERENCES catalogo_materiales(id),
+  cantidad         REAL NOT NULL CHECK (cantidad > 0),
+  precio_unitario  REAL NOT NULL CHECK (precio_unitario >= 0),  -- precio congelado al momento del pedido
+  subtotal         REAL NOT NULL CHECK (subtotal >= 0),
+  created_at       TEXT NOT NULL,
+  updated_at       TEXT NOT NULL,
+  UNIQUE (pedido_id, material_id)
+);
+
 -- Libro contable de materiales. PK = UUIDv4 (idempotencia en sync offline).
 CREATE TABLE IF NOT EXISTS movimientos (
   uuid         TEXT PRIMARY KEY,
@@ -83,7 +124,8 @@ CREATE TABLE IF NOT EXISTS movimientos (
   tarea_id     TEXT REFERENCES tareas(id),
   material_id  TEXT NOT NULL REFERENCES catalogo_materiales(id),
   cantidad     REAL NOT NULL CHECK (cantidad > 0),
-  tipo         TEXT NOT NULL CHECK (tipo IN ('INGRESO_BODEGA', 'ENVIO_OBRA', 'CONSUMO_OBRA')),
+  tipo         TEXT NOT NULL CHECK (tipo IN ('INGRESO_BODEGA', 'ENVIO_OBRA', 'CONSUMO_OBRA', 'SALIDA_FLETE')),
+  pedido_id    TEXT REFERENCES pedidos_fletes(uuid),   -- solo en SALIDA_FLETE
   usuario_id   TEXT NOT NULL REFERENCES users(id),
   timestamp    TEXT NOT NULL,          -- momento en que ocurrió (reloj del cliente)
   created_at   TEXT NOT NULL,          -- momento en que llegó al servidor
@@ -92,6 +134,7 @@ CREATE TABLE IF NOT EXISTS movimientos (
 CREATE INDEX IF NOT EXISTS idx_mov_tarea_material ON movimientos(tarea_id, material_id, tipo);
 CREATE INDEX IF NOT EXISTS idx_mov_proyecto ON movimientos(proyecto_id);
 CREATE INDEX IF NOT EXISTS idx_mov_updated ON movimientos(updated_at);
+CREATE INDEX IF NOT EXISTS idx_mov_pedido ON movimientos(pedido_id);
 
 -- Alertas generadas por el algoritmo auditor (alertas.service.js)
 CREATE TABLE IF NOT EXISTS alertas (

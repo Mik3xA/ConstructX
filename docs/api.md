@@ -1,7 +1,7 @@
-# API REST - BuildSync ERP
+# API REST y Tiempo Real - ConstructX
 
 Base URL: `http://localhost:3000/api`
-Autenticación: `Authorization: Bearer <JWT>` en todas las rutas excepto `POST /auth/login` y `GET /health`.
+Autenticación: `Authorization: Bearer <JWT>` en todas las rutas excepto `POST /auth/login`, `POST /auth/registro` y `GET /health`.
 El rol `admin` tiene acceso a todo. Fechas en ISO-8601 UTC.
 
 ## Auth
@@ -9,6 +9,7 @@ El rol `admin` tiene acceso a todo. Fechas en ISO-8601 UTC.
 | Método | Ruta | Roles | Descripción |
 |--------|------|-------|-------------|
 | POST | `/auth/login` | pública | `{ email, password }` → `{ token, user }` |
+| POST | `/auth/registro` | pública | Alta de **clientes**: `{ email, password, nombre, telefono?, empresa?, direccion? }` → `{ token, user }`. El rol siempre es `cliente`. |
 | GET | `/auth/me` | todos | Usuario actual |
 | POST | `/auth/register` | admin | `{ email, password, rol, nombre }` |
 | GET | `/auth/users` | admin | Lista usuarios |
@@ -54,24 +55,64 @@ El rol `admin` tiene acceso a todo. Fechas en ISO-8601 UTC.
 - `INGRESO_BODEGA`, `ENVIO_OBRA` → bodeguero. `CONSUMO_OBRA` → residente.
 - `201` creado · `200` + `duplicado: true` si el uuid ya existía · `409` stock insuficiente.
 
+## Portal de Clientes
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| GET | `/catalogo?categoria=&q=` | todos | `{ categorias, materiales[{ precio_unitario, imagen_url, stock_disponible, ... }], tarifa_flete }` |
+| PATCH | `/materiales/:id` | admin | `{ precio_unitario?, imagen_url?, descripcion?, categoria?, activo? }` |
+| POST | `/pedidos/cotizar` | cliente | `{ items: [{ material_id, cantidad }] }` → `{ lineas, subtotal, costo_flete, total_pagar, faltantes }` (no guarda) |
+| POST | `/pedidos` | cliente | Crea el pedido (ver abajo) |
+| GET | `/pedidos?estado=` | cliente, bodeguero | El cliente solo recibe **sus** pedidos |
+| GET | `/pedidos/:uuid` | cliente, bodeguero | Pedido con `detalles`. Un cliente recibe 404 si no es suyo |
+| PATCH | `/pedidos/:uuid/estado` | bodeguero | `{ estado: 'EN_RUTA' \| 'ENTREGADO' }` (solo avanza) |
+
+`POST /pedidos`
+
+```json
+{
+  "uuid": "opcional-uuidv4-del-cliente",
+  "items": [{ "material_id": "…", "cantidad": 10 }],
+  "direccion_entrega": "opcional: usa la del perfil",
+  "telefono_contacto": "opcional",
+  "notas": "opcional (máx. 500)",
+  "timestamp": "2026-11-13T18:00:00.000Z"
+}
+```
+
+- `201` creado · `200` + `duplicado: true` si el uuid ya existía (idempotente) · `409` stock insuficiente con `details.faltantes` · `400` entrada inválida.
+- Líneas repetidas del mismo material se suman. Cualquier precio enviado por el cliente se ignora.
+
+## Eventos en tiempo real (Socket.io)
+
+Conexión: `io('http://localhost:3000', { auth: { token: '<JWT>' } })`. Sin token válido la conexión se rechaza.
+
+| Evento | Salas | Payload | Cuándo |
+|--------|-------|---------|--------|
+| `nuevo_flete` | `rol:admin`, `rol:bodeguero` | Pedido completo con `detalles` | Un cliente confirma un pedido |
+| `flete_actualizado` | `rol:admin`, `rol:bodeguero`, `user:<cliente_id>` | Pedido + `actualizado_por` | Cambia el estado del flete |
+| `inventario_actualizado` | `rol:admin`, `rol:bodeguero` | `{ materiales: [id] }` | Un pedido descuenta stock |
+| `alerta_naranja` | `rol:admin` | Alerta | El auditor detecta una desviación nueva |
+
 ## Alertas y Dashboard (admin)
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/dashboard` | `{ kpis, proyectos, stock, alertas }` |
+| GET | `/dashboard` | `{ kpis, comercial, pedidos_recientes, proyectos, stock, alertas }` |
 | GET | `/alertas?estado=ACTIVA` | Alertas naranjas |
 | POST | `/alertas/auditar` | Corre el auditor (`{ proyecto_id?, tarea_id? }`) |
 | PATCH | `/alertas/:id/revisar` | Marca como `REVISADA` |
 
 ## Sync Offline-First
 
-`POST /sync` (bodeguero, residente, admin)
+`POST /sync` (bodeguero, residente, cliente, admin)
 
 ```json
 {
   "last_sync": "2026-11-12T00:00:00.000Z",
   "movimientos": [{ "uuid": "…", "tipo": "CONSUMO_OBRA", "material_id": "…", "cantidad": 5, "tarea_id": "…", "timestamp": "…" }],
-  "fases_avance": [{ "fase_id": "…", "porcentaje_avance_real": 25, "updated_at": "…" }]
+  "fases_avance": [{ "fase_id": "…", "porcentaje_avance_real": 25, "updated_at": "…" }],
+  "pedidos": [{ "uuid": "…", "items": [{ "material_id": "…", "cantidad": 3 }], "timestamp": "…" }]
 }
 ```
 
@@ -91,4 +132,4 @@ Respuesta:
 - El cliente guarda `server_time` como su próximo `last_sync`.
 - `movimientos` en sync **deben** traer `uuid`. Reenviar es seguro (idempotente).
 - `fases_avance` usa *last-write-wins* por `updated_at`; si es más antiguo que el del servidor se reporta en `ignorados`.
-- `alertas` solo se incluye para el rol admin. Máximo 500 elementos por lote.
+- `alertas` solo se incluye para el rol admin. Un **cliente** solo recibe `catalogo_materiales` y sus `pedidos_fletes`. Máximo 500 elementos por lote.

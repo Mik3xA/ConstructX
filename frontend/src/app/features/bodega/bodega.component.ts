@@ -10,7 +10,7 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
 
 /** Vista del Bodeguero: ingresos de proveedor y despachos a obra. */
 @Component({
-  selector: 'bs-bodega',
+  selector: 'cx-bodega',
   standalone: true,
   imports: [AsyncPipe, DatePipe, DecimalPipe, FormsModule],
   template: `
@@ -71,7 +71,7 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
                 <tr>
                   <td class="mono muted">{{ i.codigo_sku }}</td>
                   <td>{{ i.nombre }}</td>
-                  <td class="num" [class.text-accent]="i.stock_actual === 0">{{ i.stock_actual | number: '1.0-2' }} <span class="muted">{{ i.unidad }}</span></td>
+                  <td class="num" [class.text-danger]="i.stock_actual === 0">{{ i.stock_actual | number: '1.0-2' }} <span class="muted">{{ i.unidad }}</span></td>
                 </tr>
               }
             </tbody>
@@ -86,7 +86,7 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
               @for (m of movimientos$ | async; track m.uuid) {
                 <tr>
                   <td class="mono muted">{{ m.timestamp | date: 'dd/MM HH:mm' }}</td>
-                  <td><span class="chip" [class.chip--blue]="m.tipo !== 'CONSUMO_OBRA'">{{ etiquetas[m.tipo] }}</span></td>
+                  <td><span class="chip" [class]="'chip ' + chipTipo[m.tipo]">{{ etiquetas[m.tipo] }}</span></td>
                   <td>{{ m.material_nombre }}</td>
                   <td class="muted">{{ m.tarea_nombre || m.proyecto_nombre || '—' }}</td>
                   <td class="muted">{{ m.usuario_nombre }}</td>
@@ -104,9 +104,6 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
     @use 'mixins' as *;
 
     .page {
-      display: flex; flex-direction: column; gap: 1.25rem; padding: 1.25rem;
-      @include md { padding: 2rem 2.5rem; }
-      h1 { font-size: 1.85rem; margin-top: 0.25rem; }
       h2 { font-size: 1.05rem; margin-bottom: 0.75rem; }
     }
     .layout {
@@ -117,12 +114,12 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
     .form { display: flex; flex-direction: column; gap: 1rem; }
     .tabs {
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
-      background: $charcoal-900; border: $border; border-radius: $radius;
+      background: var(--bg-subtle); border-radius: $radius;
       button {
         height: 36px; border: 0; border-radius: $radius-sm; background: transparent;
-        color: $white-60; font: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer;
-        &.is-active { background: $blue-600; color: $white; }
-        &:not(.is-active):hover { color: $white; }
+        color: var(--text-muted); font: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+        &.is-active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+        &:not(.is-active):hover { color: var(--text); }
       }
     }
   `,
@@ -138,6 +135,13 @@ export class BodegaComponent implements OnInit {
     INGRESO_BODEGA: 'Ingreso',
     ENVIO_OBRA: 'Envío',
     CONSUMO_OBRA: 'Consumo',
+    SALIDA_FLETE: 'Flete cliente',
+  };
+  readonly chipTipo: Record<TipoMovimiento, string> = {
+    INGRESO_BODEGA: 'chip--olive',
+    ENVIO_OBRA: 'chip--amber',
+    CONSUMO_OBRA: '',
+    SALIDA_FLETE: 'chip--orange',
   };
 
   modo: Modo = 'INGRESO_BODEGA';

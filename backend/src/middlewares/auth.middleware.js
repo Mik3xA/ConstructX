@@ -5,6 +5,7 @@ const ROLES = Object.freeze({
   ADMIN: 'admin',
   BODEGUERO: 'bodeguero',
   RESIDENTE: 'residente',
+  CLIENTE: 'cliente',
 });
 
 /**
