@@ -53,7 +53,7 @@ const FAQ: Array<{ tema: string; preguntas: Pregunta[] }> = [
   imports: [FormsModule, RouterLink, FotoComponent],
   template: `
     <section class="page-banner">
-      <cx-foto class="page-banner__img" [src]="img.camionesArena" alt="" [prioridad]="true" />
+      <cx-foto class="page-banner__img" [foto]="img.camionesArena" alt="" [prioridad]="true" />
       <div class="page-banner__shade"></div>
       <div class="wrap page-banner__txt">
         <nav class="crumbs"><a routerLink="/">Inicio</a><span>/</span><span>Preguntas frecuentes</span></nav>

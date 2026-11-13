@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
 import { API_URL } from '../api.config';
 import { LoginResponse, RegistroCliente, Rol, Usuario } from '../models/models';
+import { CarritoService } from './carrito.service';
+import { PedidosService } from './pedidos.service';
 
 const TOKEN_KEY = 'cx_token';
 const USER_KEY = 'cx_user';
@@ -21,6 +23,8 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly api = inject(API_URL);
+  private readonly carrito = inject(CarritoService);
+  private readonly pedidos = inject(PedidosService);
 
   private readonly userSubject = new BehaviorSubject<Usuario | null>(this.leerUsuario());
   readonly user$ = this.userSubject.asObservable();
@@ -77,6 +81,9 @@ export class AuthService {
       /* almacenamiento no disponible */
     }
     this.tokenEnMemoria = null;
+    // Nada de la sesión anterior debe quedar visible para el siguiente usuario del navegador
+    this.carrito.vaciar();
+    this.pedidos.limpiar();
     this.userSubject.next(null);
     this.router.navigateByUrl('/');
   }

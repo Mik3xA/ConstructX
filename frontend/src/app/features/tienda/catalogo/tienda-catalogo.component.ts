@@ -20,7 +20,7 @@ type Orden = 'relevancia' | 'precio-asc' | 'precio-desc' | 'nombre';
   template: `
     @if (filtros$ | async; as f) {
     <section class="page-banner">
-      <cx-foto class="page-banner__img" [src]="banner(f.categoria)" alt="" [prioridad]="true" />
+      <cx-foto class="page-banner__img" [foto]="banner(f.categoria)" alt="" [prioridad]="true" />
       <div class="page-banner__shade"></div>
       <div class="wrap page-banner__txt">
         <nav class="crumbs" aria-label="Ruta"><a routerLink="/">Inicio</a><span>/</span><a routerLink="/catalogo">Productos</a>

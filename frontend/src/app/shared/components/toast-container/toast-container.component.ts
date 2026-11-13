@@ -42,11 +42,11 @@ import { ToastService } from '../../../core/services/toast.service';
   styles: `
     @use 'variables' as *;
 
-    // Móvil: sobre la barra de navegación inferior. Escritorio: arriba a la derecha (no tapa los botones de acción).
+    // Pantallas angostas: abajo. Escritorio: arriba a la derecha (no tapa los botones de acción).
     .toasts {
       position: fixed;
       right: 0.75rem;
-      bottom: calc(72px + env(safe-area-inset-bottom));
+      bottom: 1rem;
       left: 0.75rem;
       z-index: 1000;
       display: flex;

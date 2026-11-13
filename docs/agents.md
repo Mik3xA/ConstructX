@@ -29,7 +29,7 @@ Cualquier IA que lea este repositorio **debe acatar estrictamente** las siguient
 - Manejar estado con **RxJS `BehaviorSubject`** dentro de servicios en `core/`.
 - Escuchar eventos de Socket.io mediante `SocketService.on('evento')`.
 - Crear componentes reutilizables en `shared/` y vistas en `features/`.
-- Mantener el diseño **Full-Page**, moderno, cálido, minimalista, con bordes sutiles, y que funcione en móvil.
+- Mantener un diseño de **página web** (scroll natural del documento, contenido con ancho máximo), moderno y cálido, con bordes sutiles. Debe adaptarse a pantallas chicas, pero **sin** patrones de app móvil (barra de navegación inferior, contenedores con scroll propio).
 
 ### Documentación
 - Actualizar `docs/*.md` cuando cambie el esquema, un endpoint, un evento o el flujo.
@@ -62,6 +62,8 @@ Cualquier IA que lea este repositorio **debe acatar estrictamente** las siguient
 ### Frontend
 - **NO** usar librerías de componentes pesadas (Angular Material, Bootstrap, PrimeNG…) a menos que el humano lo pida.
 - **NO** escribir colores fijos (`#hex`) en componentes: usar las variables CSS del tema.
+- **NO** fijar `html`/`body` con `overflow: hidden` ni meter la página en un contenedor con scroll propio: el sitio es una página web.
+- **NO** usar ilustraciones/íconos como imagen de producto mientras haya fotos: las fotos se definen en `backend/src/config/fotos.js` y el frontend usa la cadena de respaldo de `cx-material-img`.
 - **NO** usar negro puro `#000000` en ningún modo. El modo oscuro es **matte** (`#121212` / `#1E1E1E`).
 - **NO** usar NgRx / Akita / otras librerías de estado; usar `BehaviorSubject`.
 - **NO** confiar en cálculos del frontend (carrito, desviación): son vista previa; el backend es la fuente de verdad.

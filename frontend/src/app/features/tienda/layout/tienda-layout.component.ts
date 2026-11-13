@@ -38,7 +38,6 @@ export class TiendaLayoutComponent implements OnInit {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.menuAbierto = false;
       this.cuentaAbierta = false;
-      document.querySelector('.tienda__main')?.scrollTo({ top: 0 });
     });
   }
 

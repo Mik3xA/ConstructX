@@ -60,6 +60,7 @@ constructx/
 | `src/config/database.js` | Conexión SQLite (`better-sqlite3`), WAL, FKs, control de versión de esquema. |
 | `src/config/schema.sql` | DDL de todas las tablas. |
 | `src/config/seed.js` | Datos de ejemplo: usuarios, catálogo con precios/fotos, obra, pedidos. |
+| `src/config/fotos.js` | Foto real de cada producto (palabras clave + número fijo). |
 | `src/config/init-db.js` | `npm run db:init` / `db:reset`. |
 | `src/middlewares/auth.middleware.js` | `verifyToken` y `verifyRole(...roles)`. |
 | `src/servicios/pedidos.service.js` | **Motor de pedidos** transaccional (stock, totales, flete, eventos, recibo). |

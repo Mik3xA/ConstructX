@@ -7,13 +7,11 @@
   box-sizing: border-box;
 }
 
-// ---------- Full-Page UI ----------
+// ---------- Página web: el documento hace scroll de forma natural ----------
 html,
 body {
-  height: 100%;
-  width: 100%;
+  min-height: 100%;
   margin: 0;
-  overflow: hidden;
 }
 
 body {
@@ -28,7 +26,7 @@ body {
 
 cx-root {
   display: block;
-  height: 100%;
+  min-height: 100vh;
 }
 
 h1,

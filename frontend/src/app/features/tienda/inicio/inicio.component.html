@@ -2,7 +2,7 @@
 <section class="hero" aria-roledescription="carrusel">
   @for (s of slides; track s.titulo; let i = $index) {
     <div class="hero__slide" [class.is-active]="i === slide" [attr.aria-hidden]="i !== slide">
-      <cx-foto class="hero__img" [src]="s.imagen" [alt]="s.titulo" [prioridad]="i === 0" />
+      <cx-foto class="hero__img" [foto]="s.imagen" [alt]="s.titulo" [prioridad]="i === 0" />
       <div class="hero__shade"></div>
       <div class="wrap hero__content">
         <span class="hero__eyebrow">{{ s.eyebrow }}</span>
@@ -41,7 +41,7 @@
   <div class="cats">
     @for (c of categorias; track c.nombre) {
       <a class="cat" routerLink="/catalogo" [queryParams]="{ categoria: c.nombre }">
-        <cx-foto class="cat__img" [src]="c.imagen" [alt]="c.nombre" />
+        <cx-foto class="cat__img" [foto]="c.imagen" [alt]="c.nombre" />
         <div class="cat__shade"></div>
         <div class="cat__txt"><strong>{{ c.nombre }}</strong><span>{{ c.texto }}</span></div>
       </a>
@@ -69,7 +69,7 @@
 <!-- ===== Banners promocionales ===== -->
 <section class="wrap promos">
   <a class="promo promo--orange" routerLink="/catalogo">
-    <cx-foto class="promo__img" [src]="img.camionesArena" alt="Camiones de volteo cargando material" />
+    <cx-foto class="promo__img" [foto]="img.camionesArena" alt="Camiones de volteo cargando material" />
     <div class="promo__shade"></div>
     <div class="promo__txt">
       <span class="promo__tag">Flete gratis</span>
@@ -79,7 +79,7 @@
     </div>
   </a>
   <a class="promo" routerLink="/contacto">
-    <cx-foto class="promo__img" [src]="img.revolvedora" alt="Camión revolvedor de concreto" />
+    <cx-foto class="promo__img" [foto]="img.revolvedora" alt="Camión revolvedor de concreto" />
     <div class="promo__shade"></div>
     <div class="promo__txt">
       <span class="promo__tag promo__tag--amber">Obras grandes</span>
@@ -104,7 +104,7 @@
 
 <!-- ===== Cifras ===== -->
 <section class="stats">
-  <cx-foto class="stats__img" [src]="img.supervisor" alt="Supervisor de obra" />
+  <cx-foto class="stats__img" [foto]="img.supervisor" alt="Supervisor de obra" />
   <div class="stats__shade"></div>
   <div class="wrap stats__grid">
     <div><strong class="mono">+{{ anios }}</strong><span>años abasteciendo obras</span></div>

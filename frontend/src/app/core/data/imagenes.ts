@@ -1,30 +1,37 @@
 /**
- * Fotografías reales de Unsplash (licencia Unsplash: uso comercial gratuito, sin atribución obligatoria).
- * `/photos/<id>/download` redirige a la imagen en images.unsplash.com.
- * Todas las imágenes tienen respaldo visual si no cargan (sin internet, enlace caído).
+ * Fotografías reales para banners y categorías.
+ *
+ * Fuente principal: LoremFlickr (fotos reales de Flickr por palabra clave; `lock` fija la foto).
+ * Si una foto no carga, los componentes `cx-foto` y `cx-material-img` prueban Picsum
+ * (fotos reales aleatorias) y solo al final muestran un respaldo visual.
  */
-const unsplash = (id: string, w = 1600) => `https://unsplash.com/photos/${id}/download?w=${w}`;
+export const flickr = (palabras: string, lock: number, w = 1600, h = 900) =>
+  `https://loremflickr.com/${w}/${h}/${palabras}?lock=${lock}`;
+
+/** Foto real aleatoria pero estable para una semilla (respaldo universal). */
+export const picsum = (semilla: string, w = 1200, h = 800) =>
+  `https://picsum.photos/seed/constructx-${encodeURIComponent(semilla)}/${w}/${h}`;
 
 export const IMAGENES = {
-  heroFletes: unsplash('j9SBSppgoik'), // dos camiones de volteo en obra
-  heroCemento: unsplash('rc5crEySTXo'), // estiba de bultos de cemento
-  heroAcero: unsplash('PqRvLsjD_TU'), // armado de varilla en obra
-  camionesArena: unsplash('WjL4UQ5_T4g'), // camiones de volteo en banco de arena
-  camionTierra: unsplash('uGEIMh-5MJw', 1200), // camión de volteo en obra
-  revolvedora: unsplash('-UGWA7ETrSY', 1200), // camión revolvedor
-  supervisor: unsplash('sZdlS32KvNI', 1200), // supervisor con casco
-  block: unsplash('qx-_xFPTi2g', 1200),
-  ladrillo: unsplash('s9t2XPFwIwY', 1200),
-  madera: unsplash('yVRn-d6JGzo', 1200),
-  grava: unsplash('rbQWEU0HFhQ', 1200),
-  arenaObra: unsplash('wdYyYY9F0Ts', 1200),
+  heroFletes: flickr('dump,truck,construction', 201),
+  heroCemento: flickr('cement,bags', 202),
+  heroAcero: flickr('rebar,construction,site', 203),
+  camionesArena: flickr('trucks,sand,quarry', 204),
+  camionTierra: flickr('construction,truck', 205, 1200, 800),
+  revolvedora: flickr('concrete,mixer,truck', 206, 1200, 800),
+  supervisor: flickr('construction,worker,helmet', 207, 1200, 800),
+  block: flickr('concrete,blocks', 208, 1200, 800),
+  ladrillo: flickr('bricks,pallet', 209, 1200, 800),
+  madera: flickr('lumber,yard', 210, 1200, 800),
+  grava: flickr('gravel,pile', 211, 1200, 800),
+  arenaObra: flickr('sand,construction', 212, 1200, 800),
 };
 
 /** Foto representativa por categoría del catálogo. */
 export const IMAGEN_CATEGORIA: Record<string, string> = {
-  Cementantes: IMAGENES.heroCemento,
-  Acero: unsplash('XRuBqN8o7Pg', 1200),
-  'Mampostería': IMAGENES.block,
-  Agregados: IMAGENES.grava,
-  'Madera y cimbra': IMAGENES.madera,
+  Cementantes: flickr('cement,bags,warehouse', 221, 900, 1100),
+  Acero: flickr('rebar,steel,bars', 222, 900, 1100),
+  'Mampostería': flickr('bricks,wall,construction', 223, 900, 1100),
+  Agregados: flickr('gravel,sand,pile', 224, 900, 1100),
+  'Madera y cimbra': flickr('lumber,wood,planks', 225, 900, 1100),
 };

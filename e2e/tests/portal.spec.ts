@@ -90,6 +90,32 @@ test.describe('Acceso y roles', () => {
     }
   });
 
+  test('al cerrar sesión el carrito vuelve a cero (no queda nada del cliente anterior)', async ({ page }) => {
+    await entrar(page, 'cliente@constructx.mx', /\/catalogo$/);
+    await page.getByTestId('producto').nth(0).getByTestId('agregar').click();
+    await page.getByTestId('producto').nth(1).getByTestId('agregar').click();
+    await expect(page.getByTestId('badge-carrito')).toHaveText('2');
+
+    await page.getByTestId('menu-cuenta').click();
+    await page.getByRole('menuitem', { name: 'Cerrar sesión' }).click();
+    await expect(page).toHaveURL(/localhost:4300\/$/);
+    await expect(page.getByTestId('badge-carrito')).toHaveCount(0);
+    await expect(page.getByTestId('ir-carrito')).toContainText('$0');
+    await page.reload(); // tampoco debe reaparecer desde localStorage
+    await expect(page.getByTestId('badge-carrito')).toHaveCount(0);
+    await page.getByTestId('ir-carrito').click();
+    await expect(page.getByText('Tu carrito está vacío.')).toBeVisible();
+  });
+
+  test('es una página web: el documento hace scroll (no un contenedor tipo app)', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('producto').first()).toBeVisible();
+    const alto = await page.evaluate(() => document.documentElement.scrollHeight);
+    expect(alto).toBeGreaterThan(2000);
+    await page.mouse.wheel(0, 1200);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500);
+  });
+
   test('un cliente no entra al panel interno', async ({ page }) => {
     await entrar(page, 'cliente@constructx.mx', /\/catalogo$/);
     await page.goto('/panel/dashboard');

@@ -12,7 +12,7 @@ import { FotoComponent } from '../../../shared/components/foto/foto.component';
   imports: [AsyncPipe, DecimalPipe, RouterLink, FotoComponent],
   template: `
     <section class="page-banner page-banner--tall">
-      <cx-foto class="page-banner__img" [src]="img.camionTierra" alt="Camión de volteo en obra" [prioridad]="true" />
+      <cx-foto class="page-banner__img" [foto]="img.camionTierra" alt="Camión de volteo en obra" [prioridad]="true" />
       <div class="page-banner__shade"></div>
       <div class="wrap page-banner__txt">
         <nav class="crumbs"><a routerLink="/">Inicio</a><span>/</span><span>Nosotros</span></nav>
@@ -36,9 +36,9 @@ import { FotoComponent } from '../../../shared/components/foto/foto.component';
         </div>
       </div>
       <div class="historia__fotos">
-        <cx-foto class="f1" [src]="img.supervisor" alt="Supervisor de obra con casco" />
-        <cx-foto class="f2" [src]="img.block" alt="Block de concreto apilado" />
-        <cx-foto class="f3" [src]="img.revolvedora" alt="Camión revolvedor" />
+        <cx-foto class="f1" [foto]="img.supervisor" alt="Supervisor de obra con casco" />
+        <cx-foto class="f2" [foto]="img.block" alt="Block de concreto apilado" />
+        <cx-foto class="f3" [foto]="img.revolvedora" alt="Camión revolvedor" />
       </div>
     </section>
 

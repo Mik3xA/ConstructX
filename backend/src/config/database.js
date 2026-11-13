@@ -33,6 +33,21 @@ function aplicarEsquema() {
 
 aplicarEsquema();
 
+/**
+ * Migración de datos (idempotente): las bases creadas antes usaban enlaces de descarga de
+ * Unsplash que no funcionan como imagen directa. Se reemplazan por las fotos actuales.
+ */
+function migrarFotos() {
+  const { urlFoto } = require('./fotos');
+  const viejos = db
+    .prepare("SELECT id, codigo_sku FROM catalogo_materiales WHERE imagen_url LIKE 'https://unsplash.com/photos/%/download%'")
+    .all();
+  const upd = db.prepare('UPDATE catalogo_materiales SET imagen_url = ?, updated_at = ? WHERE id = ?');
+  const t = new Date().toISOString();
+  for (const m of viejos) upd.run(urlFoto(m.codigo_sku), t, m.id);
+}
+migrarFotos();
+
 /** Marca de tiempo ISO-8601 UTC usada en todas las tablas. */
 const ahora = () => new Date().toISOString();
 

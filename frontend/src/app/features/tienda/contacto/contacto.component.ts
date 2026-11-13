@@ -14,7 +14,7 @@ import { FotoComponent } from '../../../shared/components/foto/foto.component';
   imports: [ReactiveFormsModule, RouterLink, FotoComponent],
   template: `
     <section class="page-banner">
-      <cx-foto class="page-banner__img" [src]="img.supervisor" alt="" [prioridad]="true" />
+      <cx-foto class="page-banner__img" [foto]="img.supervisor" alt="" [prioridad]="true" />
       <div class="page-banner__shade"></div>
       <div class="wrap page-banner__txt">
         <nav class="crumbs"><a routerLink="/">Inicio</a><span>/</span><span>Contacto</span></nav>

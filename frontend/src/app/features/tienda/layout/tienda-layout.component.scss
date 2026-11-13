@@ -3,16 +3,17 @@
 
 :host {
   display: block;
-  height: 100%;
 }
 
-.tienda,
+// Página web: el contenido empuja el pie de página hasta abajo
 .tienda__main {
-  height: 100%;
-}
-.tienda__main {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: var(--bg-color);
+}
+.footer-gap {
+  flex: 1 0 4rem;
 }
 
 // Contenedor centrado. Solo padding lateral: el vertical lo define cada sección.
@@ -139,7 +140,7 @@ svg {
 }
 
 .menu-btn {
-  @include lg {
+  @include md {
     display: none !important;
   }
 }
@@ -342,7 +343,7 @@ svg {
   &.is-open {
     display: block;
   }
-  @include lg {
+  @include md {
     display: block;
   }
 
@@ -351,7 +352,7 @@ svg {
     flex-direction: column;
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
-    @include lg {
+    @include md {
       flex-direction: row;
       gap: 0.25rem;
     }
@@ -370,7 +371,7 @@ svg {
     }
   }
   &__cta {
-    @include lg {
+    @include md {
       margin-left: auto;
     }
   }
@@ -379,7 +380,7 @@ svg {
     position: relative;
     &:hover .nav__panel,
     &:focus-within .nav__panel {
-      @include lg {
+      @include md {
         display: flex;
       }
     }
@@ -408,7 +409,6 @@ svg {
 
 // ---------- Pie de página ----------
 .footer {
-  margin-top: 4rem;
   background: #2b2520;
   color: rgba(241, 236, 228, 0.75);
   font-size: 0.9rem;

@@ -6,42 +6,37 @@
 const { randomUUID } = require('crypto');
 const bcrypt = require('bcryptjs');
 const { db, ahora } = require('./database');
+const { urlFoto } = require('./fotos');
 
 const PASSWORD_DEMO = 'ConstructX123!';
 
-/**
- * Fotos de Unsplash (licencia Unsplash: uso comercial gratuito, sin atribución obligatoria).
- * `/photos/<id>/download` redirige a la imagen en images.unsplash.com.
- * Si alguna no carga, el frontend muestra una ilustración local de respaldo por categoría.
- */
-const unsplash = (id) => `https://unsplash.com/photos/${id}/download?w=800`;
 
 const CATALOGO = [
-  { sku: 'CEM-50KG', nombre: 'Cemento gris CPC 30R', unidad: 'bulto', categoria: 'Cementantes', precio: 245, foto: 'rc5crEySTXo',
+  { sku: 'CEM-50KG', nombre: 'Cemento gris CPC 30R', unidad: 'bulto', categoria: 'Cementantes', precio: 245,
     descripcion: 'Saco de 50 kg. Cemento Portland compuesto para colados, firmes y mampostería.' },
-  { sku: 'CAL-25KG', nombre: 'Cal hidratada', unidad: 'bulto', categoria: 'Cementantes', precio: 98, foto: 'kTg4NXEmfs8',
+  { sku: 'CAL-25KG', nombre: 'Cal hidratada', unidad: 'bulto', categoria: 'Cementantes', precio: 98,
     descripcion: 'Saco de 25 kg. Ideal para morteros, aplanados y estabilización de suelos.' },
-  { sku: 'VAR-3/8', nombre: 'Varilla corrugada 3/8"', unidad: 'pieza', categoria: 'Acero', precio: 168, foto: 'XRuBqN8o7Pg',
+  { sku: 'VAR-3/8', nombre: 'Varilla corrugada 3/8"', unidad: 'pieza', categoria: 'Acero', precio: 168,
     descripcion: 'Pieza de 12 m, grado 42. Para castillos, cadenas y losas.' },
-  { sku: 'VAR-1/2', nombre: 'Varilla corrugada 1/2"', unidad: 'pieza', categoria: 'Acero', precio: 289, foto: 'PqRvLsjD_TU',
+  { sku: 'VAR-1/2', nombre: 'Varilla corrugada 1/2"', unidad: 'pieza', categoria: 'Acero', precio: 289,
     descripcion: 'Pieza de 12 m, grado 42. Para trabes, columnas y cimentación.' },
-  { sku: 'BLK-15', nombre: 'Block hueco 15x20x40', unidad: 'pieza', categoria: 'Mampostería', precio: 16.5, foto: 'qx-_xFPTi2g',
+  { sku: 'BLK-15', nombre: 'Block hueco 15x20x40', unidad: 'pieza', categoria: 'Mampostería', precio: 16.5,
     descripcion: 'Block de concreto vibrocomprimido para muros de carga y divisorios.' },
-  { sku: 'LAD-ROJO', nombre: 'Ladrillo rojo recocido', unidad: 'pieza', categoria: 'Mampostería', precio: 4.2, foto: 's9t2XPFwIwY',
+  { sku: 'LAD-ROJO', nombre: 'Ladrillo rojo recocido', unidad: 'pieza', categoria: 'Mampostería', precio: 4.2,
     descripcion: 'Ladrillo de barro 7x14x28 cm, cocido en horno.' },
-  { sku: 'ARE-M3', nombre: 'Arena de río', unidad: 'm3', categoria: 'Agregados', precio: 480, foto: 'wdYyYY9F0Ts',
+  { sku: 'ARE-M3', nombre: 'Arena de río', unidad: 'm3', categoria: 'Agregados', precio: 480,
     descripcion: 'Arena cribada para mezclas de concreto y mortero. Entrega a granel.' },
-  { sku: 'GRA-M3', nombre: 'Grava 3/4"', unidad: 'm3', categoria: 'Agregados', precio: 520, foto: 'rbQWEU0HFhQ',
+  { sku: 'GRA-M3', nombre: 'Grava 3/4"', unidad: 'm3', categoria: 'Agregados', precio: 520,
     descripcion: 'Grava triturada de 3/4" para concreto estructural. Entrega a granel.' },
-  { sku: 'MOR-50KG', nombre: 'Mortero para albañilería', unidad: 'bulto', categoria: 'Cementantes', precio: 189, foto: 'OiywY3XKTsQ',
+  { sku: 'MOR-50KG', nombre: 'Mortero para albañilería', unidad: 'bulto', categoria: 'Cementantes', precio: 189,
     descripcion: 'Saco de 50 kg. Para pegar block y tabique y para aplanados finos.' },
-  { sku: 'MAL-6X6', nombre: 'Malla electrosoldada 6x6 10/10', unidad: 'rollo', categoria: 'Acero', precio: 1650, foto: 'A_N61ISqiIA',
+  { sku: 'MAL-6X6', nombre: 'Malla electrosoldada 6x6 10/10', unidad: 'rollo', categoria: 'Acero', precio: 1650,
     descripcion: 'Rollo de 2.5 x 40 m para firmes, losas y pisos de concreto.' },
-  { sku: 'ALM-REC', nombre: 'Alambre recocido calibre 16', unidad: 'kg', categoria: 'Acero', precio: 42, foto: 'XRuBqN8o7Pg',
+  { sku: 'ALM-REC', nombre: 'Alambre recocido calibre 16', unidad: 'kg', categoria: 'Acero', precio: 42,
     descripcion: 'Para amarres de varilla y armados. Venta por kilo.' },
-  { sku: 'TAB-ROJO', nombre: 'Tabicón ligero 10x14x28', unidad: 'pieza', categoria: 'Mampostería', precio: 7.8, foto: 'EBvvPKtnrPc',
+  { sku: 'TAB-ROJO', nombre: 'Tabicón ligero 10x14x28', unidad: 'pieza', categoria: 'Mampostería', precio: 7.8,
     descripcion: 'Tabicón de concreto ligero, ideal para muros divisorios.' },
-  { sku: 'POL-4X4', nombre: 'Polín de pino 4x4" x 8 ft', unidad: 'pieza', categoria: 'Madera y cimbra', precio: 135, foto: 'yVRn-d6JGzo',
+  { sku: 'POL-4X4', nombre: 'Polín de pino 4x4" x 8 ft', unidad: 'pieza', categoria: 'Madera y cimbra', precio: 135,
     descripcion: 'Madera de pino de 3a para cimbra, apuntalamiento y obra negra.' },
 ];
 
@@ -99,7 +94,7 @@ function sembrar() {
     for (const m of CATALOGO) {
       const id = randomUUID();
       materiales[m.sku] = id;
-      insMat.run({ ...m, id, imagen_url: unsplash(m.foto), t });
+      insMat.run({ ...m, id, imagen_url: urlFoto(m.sku), t });
       insInv.run(randomUUID(), id, t, t);
     }
 

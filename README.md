@@ -96,4 +96,6 @@ npm test
 - [`docs/api.md`](docs/api.md) — endpoints REST y eventos de Socket.io
 - [`docs/tour_pruebas.md`](docs/tour_pruebas.md) — tour de pruebas paso a paso
 
-Las fotos del catálogo son de [Unsplash](https://unsplash.com) (licencia Unsplash). Si alguna no carga, se muestra una ilustración local de respaldo.
+## Fotografías
+
+Las fotos de productos y banners son fotos reales de Flickr elegidas por palabra clave (servicio [LoremFlickr](https://loremflickr.com)); cada producto tiene un número fijo para mostrar siempre la misma foto (`backend/src/config/fotos.js`). Si una foto no carga, se usa una foto real aleatoria de [Picsum](https://picsum.photos), y solo sin internet se ve una ilustración. Para usar fotos propias, cambia la URL de la imagen en **Panel → Productos**.
