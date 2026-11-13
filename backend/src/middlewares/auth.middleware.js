@@ -22,7 +22,11 @@ function verifyToken(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    req.user = { id: payload.sub, email: payload.email, rol: payload.rol, nombre: payload.nombre };
+    // La cuenta debe seguir existiendo y activa (un admin puede desactivarla en cualquier momento)
+    const UserModel = require('../modelos/user.model');
+    const estado = UserModel.estado(payload.sub);
+    if (!estado || !estado.activo) return res.status(401).json({ error: 'Sesión no válida: cuenta desactivada' });
+    req.user = { id: payload.sub, email: payload.email, rol: estado.rol, nombre: payload.nombre };
     return next();
   } catch (err) {
     const msg = err.name === 'TokenExpiredError' ? 'Token expirado' : 'Token inválido';

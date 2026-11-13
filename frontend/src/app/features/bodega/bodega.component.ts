@@ -1,8 +1,13 @@
 import { AsyncPipe, DatePipe, DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { TipoMovimiento } from '../../core/models/models';
+import { ItemInventario, TipoMovimiento } from '../../core/models/models';
+import { map } from 'rxjs';
 import { InventarioService } from '../../core/services/inventario.service';
+import { PanelService } from '../../core/services/panel.service';
+import { SocketService } from '../../core/services/socket.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ProyectosService } from '../../core/services/proyectos.service';
 import { mensajeError } from '../../core/utils/http-error';
 
@@ -15,9 +20,8 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
   imports: [AsyncPipe, DatePipe, DecimalPipe, FormsModule],
   template: `
     <div class="page">
-      <header>
-        <span class="eyebrow">Almacén central</span>
-        <h1>Bodega</h1>
+      <header class="page__header">
+        <div><span class="eyebrow">Almacén central</span><h1>Inventario y movimientos</h1><p>Entradas de proveedor, envíos a obra y puntos de reorden.</p></div>
       </header>
 
       <div class="layout">
@@ -63,19 +67,34 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
         </section>
 
         <section class="card">
-          <h2>Inventario</h2>
+          <div class="card__head">
+            <h2>Inventario</h2>
+            @if (bajos$ | async; as n) { <span class="chip chip--danger" data-testid="stock-bajo-chip">{{ n }} bajo mínimo</span> }
+          </div>
+          <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>SKU</th><th>Material</th><th class="num">Stock</th></tr></thead>
+            <thead><tr><th>Material</th><th class="num">Stock</th><th>Mínimo (reorden)</th></tr></thead>
             <tbody>
               @for (i of inventario$ | async; track i.id) {
-                <tr>
-                  <td class="mono muted">{{ i.codigo_sku }}</td>
-                  <td>{{ i.nombre }}</td>
-                  <td class="num" [class.text-danger]="i.stock_actual === 0">{{ i.stock_actual | number: '1.0-2' }} <span class="muted">{{ i.unidad }}</span></td>
+                <tr [class.is-low]="i.stock_bajo">
+                  <td><strong>{{ i.nombre }}</strong><div class="mono muted small">{{ i.codigo_sku }}</div></td>
+                  <td class="num" [class.text-danger]="i.stock_bajo">
+                    {{ i.stock_actual | number: '1.0-2' }} <span class="muted">{{ i.unidad }}</span>
+                    @if (i.stock_bajo) { <div class="small">Reordenar</div> }
+                  </td>
+                  <td>
+                    <div class="minimo">
+                      <input class="input mono" type="number" min="0" [(ngModel)]="minimos[i.material_id]" [attr.aria-label]="'Stock mínimo de ' + i.nombre" />
+                      @if (minimos[i.material_id] !== i.stock_minimo) {
+                        <button type="button" class="btn btn--soft btn--sm" (click)="guardarMinimo(i)">Guardar</button>
+                      }
+                    </div>
+                  </td>
                 </tr>
               }
             </tbody>
           </table>
+          </div>
         </section>
 
         <section class="card wide">
@@ -110,6 +129,9 @@ type Modo = Extract<TipoMovimiento, 'INGRESO_BODEGA' | 'ENVIO_OBRA'>;
       display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr);
       @include lg { grid-template-columns: 380px minmax(0, 1fr); }
     }
+    .small { font-size: 0.72rem; }
+    tr.is-low td { background: color-mix(in srgb, var(--danger-soft) 60%, transparent); }
+    .minimo { display: flex; gap: 0.35rem; align-items: center; .input { width: 90px; height: 34px; text-align: right; } }
     .wide { overflow-x: auto; @include lg { grid-column: 1 / -1; } }
     .form { display: flex; flex-direction: column; gap: 1rem; }
     .tabs {
@@ -128,7 +150,13 @@ export class BodegaComponent implements OnInit {
   private readonly inv = inject(InventarioService);
   private readonly proyectos = inject(ProyectosService);
 
+  private readonly panel = inject(PanelService);
+  private readonly toasts = inject(ToastService);
+  private readonly socket = inject(SocketService);
   readonly inventario$ = this.inv.inventario$;
+  readonly bajos$ = this.inventario$.pipe(map((l) => l.filter((i) => i.stock_bajo).length));
+  minimos: Record<string, number> = {};
+  private readonly destroyRef = inject(DestroyRef);
   readonly movimientos$ = this.inv.movimientos$;
   readonly proyectos$ = this.proyectos.proyectos$;
   readonly etiquetas: Record<TipoMovimiento, string> = {
@@ -161,6 +189,8 @@ export class BodegaComponent implements OnInit {
   ngOnInit(): void {
     this.refrescar();
     this.proyectos.cargar().subscribe();
+    // Los pedidos de clientes descuentan stock: refrescar en vivo
+    this.socket.on('inventario_actualizado').pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.refrescar());
   }
 
   cambiarModo(m: Modo): void {
@@ -202,8 +232,19 @@ export class BodegaComponent implements OnInit {
       });
   }
 
+  guardarMinimo(i: ItemInventario): void {
+    const n = Number(this.minimos[i.material_id]);
+    this.panel.fijarStockMinimo(i.material_id, n).subscribe({
+      next: () => {
+        this.toasts.mostrar({ tipo: 'exito', titulo: 'Punto de reorden actualizado', mensaje: `${i.nombre}: ${n} ${i.unidad}` }, 3000);
+        this.refrescar();
+      },
+      error: (e) => (this.error = mensajeError(e)),
+    });
+  }
+
   private refrescar(): void {
-    this.inv.cargarInventario().subscribe();
+    this.inv.cargarInventario().subscribe((l) => (this.minimos = Object.fromEntries(l.map((i) => [i.material_id, i.stock_minimo]))));
     this.inv.cargarMovimientos({ limit: 25 }).subscribe();
   }
 }

@@ -1,0 +1,144 @@
+<!-- ===== Carrusel principal ===== -->
+<section class="hero" aria-roledescription="carrusel">
+  @for (s of slides; track s.titulo; let i = $index) {
+    <div class="hero__slide" [class.is-active]="i === slide" [attr.aria-hidden]="i !== slide">
+      <cx-foto class="hero__img" [src]="s.imagen" [alt]="s.titulo" [prioridad]="i === 0" />
+      <div class="hero__shade"></div>
+      <div class="wrap hero__content">
+        <span class="hero__eyebrow">{{ s.eyebrow }}</span>
+        <h1>{{ s.titulo }}</h1>
+        <p>{{ s.texto }}</p>
+        <div class="hero__ctas">
+          <a class="btn btn--primary btn--lg" [routerLink]="s.cta.ruta" [queryParams]="s.cta.params">{{ s.cta.texto }}</a>
+          <a class="btn btn--lg hero__ghost" routerLink="/contacto">Cotizar por volumen</a>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="hero__dots">
+    @for (s of slides; track s.titulo; let i = $index) {
+      <button type="button" [class.is-active]="i === slide" (click)="irA(i)" [attr.aria-label]="'Diapositiva ' + (i + 1)"></button>
+    }
+  </div>
+</section>
+
+<!-- ===== Beneficios ===== -->
+<section class="wrap benefits">
+  @for (b of beneficios; track b.titulo) {
+    <div class="benefit">
+      <span class="benefit__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="b.icono" /></svg></span>
+      <div><strong>{{ b.titulo }}</strong><span>{{ b.texto }}</span></div>
+    </div>
+  }
+</section>
+
+<!-- ===== Categorías ===== -->
+<section class="wrap section">
+  <header class="section__head">
+    <div><span class="eyebrow">Compra por categoría</span><h2>Todo para tu obra negra</h2></div>
+    <a routerLink="/catalogo" class="link-more">Ver todo el catálogo →</a>
+  </header>
+  <div class="cats">
+    @for (c of categorias; track c.nombre) {
+      <a class="cat" routerLink="/catalogo" [queryParams]="{ categoria: c.nombre }">
+        <cx-foto class="cat__img" [src]="c.imagen" [alt]="c.nombre" />
+        <div class="cat__shade"></div>
+        <div class="cat__txt"><strong>{{ c.nombre }}</strong><span>{{ c.texto }}</span></div>
+      </a>
+    }
+  </div>
+</section>
+
+<!-- ===== Más vendidos ===== -->
+<section class="wrap section">
+  <header class="section__head">
+    <div><span class="eyebrow">Lo que más piden nuestros clientes</span><h2>Más vendidos</h2></div>
+    <a routerLink="/catalogo" class="link-more">Ver más productos →</a>
+  </header>
+  @if (destacados$ | async; as productos) {
+    <div class="products">
+      @for (m of productos; track m.id; let i = $index) {
+        <cx-producto-card [m]="m" [etiqueta]="i < 3 ? 'Más vendido' : ''" (agregar)="agregar($event)" />
+      }
+    </div>
+  } @else {
+    <div class="products">@for (i of [1, 2, 3, 4]; track i) { <div class="skeleton" style="height: 380px"></div> }</div>
+  }
+</section>
+
+<!-- ===== Banners promocionales ===== -->
+<section class="wrap promos">
+  <a class="promo promo--orange" routerLink="/catalogo">
+    <cx-foto class="promo__img" [src]="img.camionesArena" alt="Camiones de volteo cargando material" />
+    <div class="promo__shade"></div>
+    <div class="promo__txt">
+      <span class="promo__tag">Flete gratis</span>
+      <h3>En pedidos desde $25,000</h3>
+      <p>Arma tu pedido y el envío corre por nuestra cuenta.</p>
+      <span class="btn btn--primary">Armar mi pedido</span>
+    </div>
+  </a>
+  <a class="promo" routerLink="/contacto">
+    <cx-foto class="promo__img" [src]="img.revolvedora" alt="Camión revolvedor de concreto" />
+    <div class="promo__shade"></div>
+    <div class="promo__txt">
+      <span class="promo__tag promo__tag--amber">Obras grandes</span>
+      <h3>Cotización por volumen</h3>
+      <p>Programamos entregas por etapas para toda tu obra.</p>
+      <span class="btn btn--light">Hablar con un asesor</span>
+    </div>
+  </a>
+</section>
+
+<!-- ===== Cómo funciona ===== -->
+<section class="wrap section">
+  <header class="section__head section__head--center">
+    <div><span class="eyebrow">Así de fácil</span><h2>¿Cómo pedir tu flete?</h2></div>
+  </header>
+  <ol class="steps">
+    @for (p of pasos; track p.n) {
+      <li class="step"><span class="step__n">{{ p.n }}</span><strong>{{ p.titulo }}</strong><span>{{ p.texto }}</span></li>
+    }
+  </ol>
+</section>
+
+<!-- ===== Cifras ===== -->
+<section class="stats">
+  <cx-foto class="stats__img" [src]="img.supervisor" alt="Supervisor de obra" />
+  <div class="stats__shade"></div>
+  <div class="wrap stats__grid">
+    <div><strong class="mono">+{{ anios }}</strong><span>años abasteciendo obras</span></div>
+    @if (info$ | async; as info) {
+      <div><strong class="mono">{{ info.cifras.fletes_entregados | number }}</strong><span>fletes entregados</span></div>
+      <div><strong class="mono">{{ info.cifras.productos }}</strong><span>productos en catálogo</span></div>
+    }
+    <div><strong class="mono">{{ empresa.zonas.length }}</strong><span>municipios con entrega</span></div>
+  </div>
+</section>
+
+<!-- ===== Testimonios ===== -->
+<section class="wrap section">
+  <header class="section__head section__head--center">
+    <div><span class="eyebrow">Opiniones</span><h2>Lo que dicen nuestros clientes</h2></div>
+  </header>
+  <div class="quotes">
+    @for (t of testimonios; track t.nombre) {
+      <figure class="quote">
+        <div class="quote__stars" aria-label="5 de 5 estrellas">★★★★★</div>
+        <blockquote>“{{ t.texto }}”</blockquote>
+        <figcaption><strong>{{ t.nombre }}</strong><span>{{ t.rol }}</span></figcaption>
+      </figure>
+    }
+  </div>
+</section>
+
+<!-- ===== Llamado a registrarse ===== -->
+<section class="wrap">
+  <div class="cta-reg">
+    <div>
+      <h2>Crea tu cuenta y pide en minutos</h2>
+      <p>Guarda la dirección de tu obra, consulta tu historial y recibe tus recibos por correo.</p>
+    </div>
+    <a class="btn btn--primary btn--lg" routerLink="/acceso" [queryParams]="{ modo: 'registro' }">Crear cuenta gratis</a>
+  </div>
+</section>

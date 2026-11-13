@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   telefono       TEXT,
   empresa        TEXT,
   direccion      TEXT,
+  activo         INTEGER NOT NULL DEFAULT 1 CHECK (activo IN (0, 1)),  -- 0 = no puede iniciar sesión
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL
 );
@@ -80,6 +81,7 @@ CREATE TABLE IF NOT EXISTS inventario_central (
   id            TEXT PRIMARY KEY,
   material_id   TEXT NOT NULL UNIQUE REFERENCES catalogo_materiales(id),
   stock_actual  REAL NOT NULL DEFAULT 0 CHECK (stock_actual >= 0),
+  stock_minimo  REAL NOT NULL DEFAULT 0 CHECK (stock_minimo >= 0),   -- punto de reorden
   created_at    TEXT NOT NULL,
   updated_at    TEXT NOT NULL
 );
@@ -96,6 +98,11 @@ CREATE TABLE IF NOT EXISTS pedidos_fletes (
   direccion_entrega  TEXT NOT NULL,
   telefono_contacto  TEXT,
   notas              TEXT,
+  chofer             TEXT,               -- asignado al despachar (EN_RUTA)
+  vehiculo           TEXT,
+  fecha_estimada     TEXT,               -- fecha estimada de entrega (YYYY-MM-DD)
+  despachado_at      TEXT,
+  entregado_at       TEXT,
   recibo_enviado_at  TEXT,               -- cuándo se envió el recibo por email
   timestamp          TEXT NOT NULL,      -- momento del pedido (reloj del cliente)
   created_at         TEXT NOT NULL,
@@ -155,3 +162,35 @@ CREATE TABLE IF NOT EXISTS alertas (
   UNIQUE (tarea_id, material_id)
 );
 CREATE INDEX IF NOT EXISTS idx_alertas_estado ON alertas(estado);
+
+-- Solicitudes de material del Residente a la Bodega central.
+-- Al aprobarse se genera (en la misma transacción) un movimiento ENVIO_OBRA.
+CREATE TABLE IF NOT EXISTS solicitudes_material (
+  id              TEXT PRIMARY KEY,
+  proyecto_id     TEXT NOT NULL REFERENCES proyectos(id),
+  tarea_id        TEXT REFERENCES tareas(id),
+  material_id     TEXT NOT NULL REFERENCES catalogo_materiales(id),
+  cantidad        REAL NOT NULL CHECK (cantidad > 0),
+  estado          TEXT NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'APROBADA', 'RECHAZADA')),
+  notas           TEXT,
+  motivo_rechazo  TEXT,
+  solicitante_id  TEXT NOT NULL REFERENCES users(id),
+  atendido_por    TEXT REFERENCES users(id),
+  movimiento_uuid TEXT REFERENCES movimientos(uuid),
+  created_at      TEXT NOT NULL,
+  updated_at      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_solicitudes_estado ON solicitudes_material(estado);
+
+-- Mensajes del formulario de contacto público.
+CREATE TABLE IF NOT EXISTS mensajes_contacto (
+  id          TEXT PRIMARY KEY,
+  nombre      TEXT NOT NULL,
+  email       TEXT NOT NULL,
+  telefono    TEXT,
+  asunto      TEXT NOT NULL,
+  mensaje     TEXT NOT NULL,
+  leido       INTEGER NOT NULL DEFAULT 0 CHECK (leido IN (0, 1)),
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL
+);

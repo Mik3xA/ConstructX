@@ -10,9 +10,22 @@ module.exports = {
 
   /** POST /api/materiales  (Admin) */
   crearMaterial(req, res) {
-    const { codigo_sku, nombre, unidad } = req.body || {};
+    const { codigo_sku, nombre, unidad, categoria, descripcion, precio_unitario, imagen_url } = req.body || {};
     if (!codigo_sku || !nombre || !unidad) throw new HttpError(400, 'codigo_sku, nombre y unidad son obligatorios');
-    res.status(201).json(MaterialModel.create({ codigo_sku, nombre, unidad }));
+    const precio = Number(precio_unitario ?? 0);
+    if (!Number.isFinite(precio) || precio < 0) throw new HttpError(400, 'precio_unitario debe ser >= 0');
+    if (imagen_url && !/^https?:\/\//.test(imagen_url)) throw new HttpError(400, 'imagen_url debe ser una URL http(s)');
+    res.status(201).json(
+      MaterialModel.create({
+        codigo_sku: String(codigo_sku).trim().toUpperCase(),
+        nombre: String(nombre).trim(),
+        unidad: String(unidad).trim(),
+        categoria: categoria || 'General',
+        descripcion: descripcion || null,
+        precio_unitario: precio,
+        imagen_url: imagen_url || null,
+      })
+    );
   },
 
   /** GET /api/inventario */

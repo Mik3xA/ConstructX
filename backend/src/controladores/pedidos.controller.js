@@ -20,6 +20,13 @@ module.exports = {
   obtener: (req, res) => res.json(pedidosService.obtener(req.params.uuid, req.user)),
 
   /** PATCH /api/pedidos/:uuid/estado  { estado: 'EN_RUTA' | 'ENTREGADO' } */
-  cambiarEstado: (req, res) =>
-    res.json(pedidosService.cambiarEstado(req.params.uuid, (req.body || {}).estado, req.user)),
+  cambiarEstado(req, res) {
+    const { estado, chofer, vehiculo, fecha_estimada } = req.body || {};
+    res.json(pedidosService.cambiarEstado(req.params.uuid, estado, req.user, { chofer, vehiculo, fecha_estimada }));
+  },
+
+  /** GET /api/pedidos/:uuid/recibo  -> HTML del recibo */
+  recibo(req, res) {
+    res.type('html').send(pedidosService.reciboHtml(req.params.uuid, req.user));
+  },
 };

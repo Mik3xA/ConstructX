@@ -14,6 +14,17 @@ El rol `admin` tiene acceso a todo. Fechas en ISO-8601 UTC.
 | POST | `/auth/register` | admin | `{ email, password, rol, nombre }` |
 | GET | `/auth/users` | admin | Lista usuarios |
 
+| PATCH | `/auth/me` | todos | Perfil propio: `{ nombre?, telefono?, empresa?, direccion?, password_actual?, password_nueva? }` |
+
+## Tienda pública (sin sesión)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/public/catalogo?categoria=&q=` | Productos activos con `disponibilidad` (DISPONIBLE / POCAS / AGOTADO) y `vendidos`; **sin** cifra exacta de stock |
+| GET | `/public/catalogo/:sku` | `{ producto, relacionados }` |
+| GET | `/public/info` | `{ tarifa_flete, cifras: { fletes_entregados, clientes, productos } }` |
+| POST | `/public/contacto` | `{ nombre, email, telefono?, asunto, mensaje }` → 201. Límite: 5 mensajes por IP cada 10 min (429) |
+
 ## Proyectos / Planeación
 
 | Método | Ruta | Roles | Descripción |
@@ -65,7 +76,23 @@ El rol `admin` tiene acceso a todo. Fechas en ISO-8601 UTC.
 | POST | `/pedidos` | cliente | Crea el pedido (ver abajo) |
 | GET | `/pedidos?estado=` | cliente, bodeguero | El cliente solo recibe **sus** pedidos |
 | GET | `/pedidos/:uuid` | cliente, bodeguero | Pedido con `detalles`. Un cliente recibe 404 si no es suyo |
-| PATCH | `/pedidos/:uuid/estado` | bodeguero | `{ estado: 'EN_RUTA' \| 'ENTREGADO' }` (solo avanza) |
+| PATCH | `/pedidos/:uuid/estado` | bodeguero | `{ estado, chofer?, vehiculo?, fecha_estimada? }` — solo avanza; `EN_RUTA` exige chofer y vehículo |
+| GET | `/pedidos/:uuid/recibo` | cliente, bodeguero | HTML del recibo (el cliente solo el suyo) |
+
+## Gestión interna
+
+| Método | Ruta | Roles | Descripción |
+|--------|------|-------|-------------|
+| POST | `/solicitudes` | residente | `{ proyecto_id \| tarea_id, material_id, cantidad, notas? }` |
+| GET | `/solicitudes?estado=` | residente, bodeguero | El residente solo ve las suyas |
+| PATCH | `/solicitudes/:id/aprobar` | bodeguero | Genera `ENVIO_OBRA` y descuenta stock (409 si no alcanza) |
+| PATCH | `/solicitudes/:id/rechazar` | bodeguero | `{ motivo }` obligatorio |
+| PATCH | `/inventario/:materialId/minimo` | bodeguero | `{ stock_minimo }` (punto de reorden) |
+| GET | `/reportes/ventas?dias=14` | admin | `{ serie, top_materiales, totales, por_estado }` |
+| GET | `/usuarios?rol=` | admin | Usuarios con `total_pedidos` y `total_comprado` |
+| PATCH | `/usuarios/:id` | admin | `{ activo?, rol?, nombre?, telefono?, password? }` (no puede desactivarse a sí mismo) |
+| GET | `/mensajes` | admin | Mensajes de contacto |
+| PATCH | `/mensajes/:id` | admin | `{ leido }` |
 
 `POST /pedidos`
 
@@ -93,12 +120,16 @@ Conexión: `io('http://localhost:3000', { auth: { token: '<JWT>' } })`. Sin toke
 | `flete_actualizado` | `rol:admin`, `rol:bodeguero`, `user:<cliente_id>` | Pedido + `actualizado_por` | Cambia el estado del flete |
 | `inventario_actualizado` | `rol:admin`, `rol:bodeguero` | `{ materiales: [id] }` | Un pedido descuenta stock |
 | `alerta_naranja` | `rol:admin` | Alerta | El auditor detecta una desviación nueva |
+| `stock_bajo` | `rol:admin`, `rol:bodeguero` | `[{ nombre, stock_actual, stock_minimo, ... }]` | Un pedido deja materiales en o bajo su mínimo |
+| `solicitud_material` | `rol:admin`, `rol:bodeguero` | Solicitud | Un residente pide material |
+| `solicitud_actualizada` | staff + `user:<residente>` | Solicitud | Se aprueba o rechaza |
+| `mensaje_contacto` | `rol:admin` | Mensaje | Llega un mensaje del formulario de contacto |
 
 ## Alertas y Dashboard (admin)
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/dashboard` | `{ kpis, comercial, pedidos_recientes, proyectos, stock, alertas }` |
+| GET | `/dashboard` | `{ kpis, comercial, pedidos_recientes, stock_bajo, mensajes_sin_leer, solicitudes_pendientes, proyectos, stock, alertas }` |
 | GET | `/alertas?estado=ACTIVA` | Alertas naranjas |
 | POST | `/alertas/auditar` | Corre el auditor (`{ proyecto_id?, tarea_id? }`) |
 | PATCH | `/alertas/:id/revisar` | Marca como `REVISADA` |

@@ -3,7 +3,9 @@
 Plataforma integral para materiales de construcción:
 
 - **ERP de obra:** compara el presupuesto BOM contra el consumo real y dispara **alertas de merma** cuando el consumo supera el avance en más de 5 puntos.
-- **Portal de clientes:** catálogo con fotos y precios, carrito, **pedido de fletes** con descuento transaccional de inventario, **notificaciones en vivo** (Socket.io) y **recibo por email** (Nodemailer).
+- **Tienda en línea (página de inicio):** inicio con banners, catálogo por categorías, ficha de producto, Nosotros, Preguntas frecuentes y Contacto. Se navega sin cuenta; el registro se pide al confirmar el pedido.
+- **Portal de clientes:** carrito, **pedido de fletes** con descuento transaccional de inventario, seguimiento en vivo (Socket.io), **recibo por email** (Nodemailer), historial y perfil.
+- **Panel interno:** dashboard, reportes de ventas, productos y precios, usuarios, mensajes, despacho con chofer, puntos de reorden y solicitudes de material de obra.
 - **Tema Light / Dark matte** automático (según el dispositivo) con toggle manual.
 
 | Capa | Tecnología |
@@ -31,18 +33,22 @@ npm install
 npm start            # http://localhost:4200
 ```
 
-> **¿Venías de BuildSync?** El esquema cambió (v2). Si `npm start` te lo indica, ejecuta `npm run db:reset`.
+> **¿Actualizaste el código?** El esquema de la base de datos cambió (v3). Si `npm start` te lo indica, ejecuta `npm run db:reset`.
 
 ### Usuarios de prueba (contraseña `ConstructX123!`)
 
+`http://localhost:4200` abre la **tienda**. Para entrar: botón **Ingresar** (o `/acceso`).
+
 | Rol | Email | Pantalla inicial |
 |-----|-------|------------------|
-| Cliente | `cliente@constructx.mx` | `/catalogo` — catálogo, carrito y mis pedidos |
-| Administrador | `admin@constructx.mx` | `/dashboard` — ventas, pedidos en vivo, obras y alertas |
-| Bodeguero | `bodega@constructx.mx` | `/bodega` y `/fletes` — inventario y despacho de fletes |
-| Residente | `residente@constructx.mx` | `/campo` — consumo diario y avance |
+| Cliente | `cliente@constructx.mx` (o `maria@obrasgarza.mx`) | Tienda → `/mi-cuenta` |
+| Administrador | `admin@constructx.mx` | `/panel/dashboard` |
+| Bodeguero | `bodega@constructx.mx` | `/panel/fletes` |
+| Residente | `residente@constructx.mx` | `/panel/campo` |
 
-También puedes crear clientes nuevos desde la pestaña **Crear cuenta** del login.
+Los clientes nuevos se registran con **Crear cuenta** (o desde el carrito al confirmar).
+
+👉 **Guía para demostrar todo paso a paso:** [`docs/tour_pruebas.md`](docs/tour_pruebas.md)
 
 ## Correos (recibos)
 
@@ -88,5 +94,6 @@ npm test
 - [`docs/estructura.md`](docs/estructura.md) — estructura de carpetas
 - [`docs/flujo_negocio.md`](docs/flujo_negocio.md) — ciclo de materiales, pedidos de flete y auditor
 - [`docs/api.md`](docs/api.md) — endpoints REST y eventos de Socket.io
+- [`docs/tour_pruebas.md`](docs/tour_pruebas.md) — tour de pruebas paso a paso
 
 Las fotos del catálogo son de [Unsplash](https://unsplash.com) (licencia Unsplash). Si alguna no carga, se muestra una ilustración local de respaldo.

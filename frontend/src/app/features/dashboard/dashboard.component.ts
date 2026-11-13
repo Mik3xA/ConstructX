@@ -2,7 +2,7 @@ import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common'
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Subscription, merge } from 'rxjs';
-import { Alerta } from '../../core/models/models';
+import { Alerta, StockBajo } from '../../core/models/models';
 import { AlertasService } from '../../core/services/alertas.service';
 import { SocketService } from '../../core/services/socket.service';
 import { mensajeError } from '../../core/utils/http-error';
@@ -38,8 +38,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.socket.on('nuevo_flete'),
       this.socket.on('flete_actualizado'),
       this.socket.on('alerta_naranja'),
+      this.socket.on('stock_bajo'),
+      this.socket.on('solicitud_material'),
+      this.socket.on('mensaje_contacto'),
     ).subscribe((evento) => {
-      if ('total_pagar' in evento && evento.estado === 'PENDIENTE') {
+      if (!Array.isArray(evento) && 'total_pagar' in evento && evento.estado === 'PENDIENTE') {
         this.nuevos.add(evento.uuid);
         setTimeout(() => this.nuevos.delete(evento.uuid), 8000);
       }
@@ -65,6 +68,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.auditando = false;
       },
     });
+  }
+
+  nombresBajos(l: StockBajo[]): string {
+    return l.map((s) => s.nombre).slice(0, 3).join(', ') + (l.length > 3 ? '…' : '');
   }
 
   enAlerta(p: { alertas_activas: number }): boolean {

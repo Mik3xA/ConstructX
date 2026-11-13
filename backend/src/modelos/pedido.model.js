@@ -53,8 +53,56 @@ const PedidoModel = {
       .all(params);
   },
 
-  updateEstado(uuid, estado, t) {
-    db.prepare('UPDATE pedidos_fletes SET estado = ?, updated_at = ? WHERE uuid = ?').run(estado, t, uuid);
+  updateEstado(uuid, estado, t, extra = {}) {
+    db.prepare(
+      `UPDATE pedidos_fletes SET estado = @estado, updated_at = @t,
+              chofer = COALESCE(@chofer, chofer), vehiculo = COALESCE(@vehiculo, vehiculo),
+              fecha_estimada = COALESCE(@fecha_estimada, fecha_estimada),
+              despachado_at = CASE WHEN @estado = 'EN_RUTA' THEN @t ELSE despachado_at END,
+              entregado_at = CASE WHEN @estado = 'ENTREGADO' THEN @t ELSE entregado_at END
+       WHERE uuid = @uuid`
+    ).run({ uuid, estado, t, chofer: extra.chofer ?? null, vehiculo: extra.vehiculo ?? null, fecha_estimada: extra.fecha_estimada ?? null });
+  },
+
+  /** Reporte de ventas de los últimos `dias` días (fechas en UTC). */
+  reporteVentas(dias) {
+    const desde = new Date(Date.now() - (dias - 1) * 86400000).toISOString().slice(0, 10);
+    const porDia = db
+      .prepare(
+        `SELECT substr(timestamp, 1, 10) AS fecha, COUNT(*) AS pedidos, ROUND(SUM(total_pagar), 2) AS total
+         FROM pedidos_fletes WHERE substr(timestamp, 1, 10) >= ? GROUP BY fecha ORDER BY fecha`
+      )
+      .all(desde);
+    // Rellenar los días sin ventas para que la serie sea continua
+    const mapa = new Map(porDia.map((d) => [d.fecha, d]));
+    const serie = [];
+    for (let i = dias - 1; i >= 0; i--) {
+      const fecha = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      serie.push(mapa.get(fecha) || { fecha, pedidos: 0, total: 0 });
+    }
+    const top = db
+      .prepare(
+        `SELECT m.nombre, m.unidad, m.categoria, ROUND(SUM(d.cantidad), 2) AS cantidad, ROUND(SUM(d.subtotal), 2) AS importe
+         FROM detalles_pedido d
+         JOIN pedidos_fletes p ON p.uuid = d.pedido_id
+         JOIN catalogo_materiales m ON m.id = d.material_id
+         WHERE substr(p.timestamp, 1, 10) >= ?
+         GROUP BY m.id ORDER BY importe DESC LIMIT 6`
+      )
+      .all(desde);
+    const totales = db
+      .prepare(
+        `SELECT COUNT(*) AS pedidos, COALESCE(ROUND(SUM(total_pagar), 2), 0) AS ventas,
+                COALESCE(ROUND(AVG(total_pagar), 2), 0) AS ticket_promedio,
+                COALESCE(ROUND(SUM(costo_flete), 2), 0) AS ingresos_flete,
+                COUNT(DISTINCT cliente_id) AS clientes
+         FROM pedidos_fletes WHERE substr(timestamp, 1, 10) >= ?`
+      )
+      .get(desde);
+    const porEstado = db
+      .prepare(`SELECT estado, COUNT(*) AS n FROM pedidos_fletes WHERE substr(timestamp, 1, 10) >= ? GROUP BY estado`)
+      .all(desde);
+    return { dias, desde, serie, top_materiales: top, totales, por_estado: porEstado };
   },
 
   marcarReciboEnviado(uuid, t) {

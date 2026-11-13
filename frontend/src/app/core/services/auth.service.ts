@@ -10,9 +10,9 @@ const USER_KEY = 'cx_user';
 
 /** Ruta de inicio según rol. */
 export const HOME_POR_ROL: Record<Rol, string> = {
-  admin: '/dashboard',
-  bodeguero: '/bodega',
-  residente: '/campo',
+  admin: '/panel/dashboard',
+  bodeguero: '/panel/fletes',
+  residente: '/panel/campo',
   cliente: '/catalogo',
 };
 
@@ -65,6 +65,10 @@ export class AuthService {
       .pipe(tap((r) => this.guardarSesion(r)), map(({ user }) => user));
   }
 
+  actualizarPerfil(cambios: Partial<Usuario> & { password_actual?: string; password_nueva?: string }): Observable<Usuario> {
+    return this.http.patch<Usuario>(`${this.api}/auth/me`, cambios).pipe(tap((u) => this.refrescarUsuario(u)));
+  }
+
   logout(): void {
     try {
       localStorage.removeItem(TOKEN_KEY);
@@ -74,7 +78,7 @@ export class AuthService {
     }
     this.tokenEnMemoria = null;
     this.userSubject.next(null);
-    this.router.navigateByUrl('/login');
+    this.router.navigateByUrl('/');
   }
 
   /** El admin pasa siempre (igual que verifyRole en el backend). */
@@ -90,7 +94,21 @@ export class AuthService {
   }
 
   homeUrl(): string {
-    return this.user ? HOME_POR_ROL[this.user.rol] : '/login';
+    return this.user ? HOME_POR_ROL[this.user.rol] : '/';
+  }
+
+  get esCliente(): boolean {
+    return this.user?.rol === 'cliente';
+  }
+
+  /** Actualiza el usuario en sesión (p. ej. tras editar el perfil). */
+  refrescarUsuario(u: Usuario): void {
+    try {
+      localStorage.setItem(USER_KEY, JSON.stringify(u));
+    } catch {
+      /* solo memoria */
+    }
+    this.userSubject.next(u);
   }
 
   private leerUsuario(): Usuario | null {

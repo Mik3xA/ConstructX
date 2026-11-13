@@ -26,12 +26,29 @@
       />
     </section>
 
+    <!-- Atención requerida -->
+    <section class="atencion">
+      <a class="aviso" routerLink="/panel/bodega" [class.is-warn]="d.stock_bajo.length > 0" data-testid="aviso-stock">
+        <span class="aviso__n mono">{{ d.stock_bajo.length }}</span>
+        <div><strong>Materiales bajo mínimo</strong>
+          <span>@if (d.stock_bajo.length) { {{ nombresBajos(d.stock_bajo) }} } @else { Inventario en niveles sanos }</span></div>
+      </a>
+      <a class="aviso" routerLink="/panel/solicitudes" [class.is-warn]="d.solicitudes_pendientes > 0">
+        <span class="aviso__n mono">{{ d.solicitudes_pendientes }}</span>
+        <div><strong>Solicitudes de obra pendientes</strong><span>Material pedido por residentes</span></div>
+      </a>
+      <a class="aviso" routerLink="/panel/mensajes" [class.is-warn]="d.mensajes_sin_leer > 0">
+        <span class="aviso__n mono">{{ d.mensajes_sin_leer }}</span>
+        <div><strong>Mensajes sin leer</strong><span>Cotizaciones y dudas de la tienda</span></div>
+      </a>
+    </section>
+
     <div class="grid">
       <!-- Pedidos en vivo -->
       <section class="card orders">
         <div class="card__head">
           <h2>Pedidos recientes</h2>
-          <a routerLink="/fletes" class="btn btn--soft btn--sm">Ver todos</a>
+          <a routerLink="/panel/fletes" class="btn btn--soft btn--sm">Ver todos</a>
         </div>
         <div class="table-wrap">
           <table class="table">

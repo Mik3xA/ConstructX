@@ -10,6 +10,7 @@ router.post('/login', asyncHandler(ctrl.login));
 router.post('/registro', asyncHandler(ctrl.registroCliente));
 
 router.get('/me', verifyToken, asyncHandler(ctrl.me));
+router.patch('/me', verifyToken, asyncHandler(ctrl.actualizarPerfil));
 router.post('/register', verifyToken, verifyRole(ROLES.ADMIN), asyncHandler(ctrl.register));
 router.get('/users', verifyToken, verifyRole(ROLES.ADMIN), asyncHandler(ctrl.listUsers));
 

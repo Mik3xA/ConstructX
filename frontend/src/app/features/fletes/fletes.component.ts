@@ -1,4 +1,5 @@
 import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription, map } from 'rxjs';
 import { EstadoPedido, Pedido } from '../../core/models/models';
@@ -22,7 +23,7 @@ const ACCION: Partial<Record<EstadoPedido, { siguiente: EstadoPedido; texto: str
 @Component({
   selector: 'cx-fletes',
   standalone: true,
-  imports: [AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, EstadoPedidoComponent],
+  imports: [AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, FormsModule, EstadoPedidoComponent],
   template: `
     <div class="page">
       <header class="page__header">
@@ -71,6 +72,7 @@ const ACCION: Partial<Record<EstadoPedido, { siguiente: EstadoPedido; texto: str
                       <button type="button" class="btn btn--sm" [class.btn--primary]="p.estado === 'PENDIENTE'" [class.btn--soft]="p.estado !== 'PENDIENTE'"
                               (click)="avanzar(p, a.siguiente)" [disabled]="procesando === p.uuid">{{ a.texto }}</button>
                     }
+                    @if (p.estado === 'EN_RUTA' && p.chofer) { <div class="muted small">{{ p.chofer }} · {{ p.vehiculo }}</div> }
                   </td>
                 </tr>
               } @empty {
@@ -95,6 +97,8 @@ const ACCION: Partial<Record<EstadoPedido, { siguiente: EstadoPedido; texto: str
           <dt>Entrega</dt><dd>{{ s.direccion_entrega }}</dd>
           @if (s.telefono_contacto) { <dt>Teléfono</dt><dd>{{ s.telefono_contacto }}</dd> }
           @if (s.notas) { <dt>Notas</dt><dd>{{ s.notas }}</dd> }
+          @if (s.chofer) { <dt>Chofer</dt><dd>{{ s.chofer }} · {{ s.vehiculo }}</dd> }
+          @if (s.fecha_estimada) { <dt>Entrega estimada</dt><dd>{{ s.fecha_estimada }}</dd> }
           <dt>Recibo por email</dt><dd>{{ s.recibo_enviado_at ? 'Enviado ' + (s.recibo_enviado_at | date: 'HH:mm') : 'Pendiente' }}</dd>
         </dl>
         <table class="table">
@@ -109,10 +113,32 @@ const ACCION: Partial<Record<EstadoPedido, { siguiente: EstadoPedido; texto: str
           <span>Flete {{ s.costo_flete === 0 ? '(gratis)' : (s.costo_flete | currency: 'MXN' : 'symbol-narrow') }}</span>
           <strong class="mono">{{ s.total_pagar | currency: 'MXN' : 'symbol-narrow' }}</strong>
         </div>
+        <button type="button" class="btn btn--ghost btn--block" (click)="pedidosSrv.abrirRecibo(s.uuid)">Ver / imprimir recibo</button>
         @if (accion(s); as a) {
           <button type="button" class="btn btn--primary btn--block btn--lg" (click)="avanzar(s, a.siguiente)">{{ a.texto }}</button>
         }
       </aside>
+    }
+
+    @if (despachando; as d) {
+      <div class="backdrop backdrop--top" (click)="despachando = null"></div>
+      <form class="modal" role="dialog" aria-label="Despachar flete" (ngSubmit)="confirmarDespacho()">
+        <h2>Despachar pedido <span class="mono">{{ d.uuid.slice(0, 8).toUpperCase() }}</span></h2>
+        <p class="muted">{{ d.cliente_nombre }} · {{ d.direccion_entrega }}</p>
+        <div class="field"><label for="d-chofer">Chofer</label>
+          <select id="d-chofer" class="select" name="chofer" [(ngModel)]="despacho.chofer" required>
+            @for (c of choferes; track c) { <option [value]="c">{{ c }}</option> }
+          </select></div>
+        <div class="field"><label for="d-veh">Unidad</label>
+          <select id="d-veh" class="select" name="vehiculo" [(ngModel)]="despacho.vehiculo" required>
+            @for (v of vehiculos; track v) { <option [value]="v">{{ v }}</option> }
+          </select></div>
+        <div class="field"><label for="d-fecha">Entrega estimada</label><input id="d-fecha" class="input" type="date" name="fecha" [(ngModel)]="despacho.fecha_estimada" /></div>
+        <div class="modal__acc">
+          <button type="button" class="btn btn--ghost" (click)="despachando = null">Cancelar</button>
+          <button type="submit" class="btn btn--primary" data-testid="confirmar-despacho">Confirmar salida a ruta</button>
+        </div>
+      </form>
     }
   `,
   styles: `
@@ -169,12 +195,17 @@ const ACCION: Partial<Record<EstadoPedido, { siguiente: EstadoPedido; texto: str
         strong { font-size: 1.4rem; color: var(--primary-orange); }
       }
     }
+    .backdrop--top { z-index: 950; }
+    .modal { position: fixed; z-index: 951; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100% - 2rem));
+      display: flex; flex-direction: column; gap: 0.9rem; padding: 1.5rem; border-radius: $radius-lg; background: var(--surface); box-shadow: var(--shadow-lg);
+      h2 { font-size: 1.2rem; } p { margin: 0; font-size: 0.88rem; }
+      &__acc { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem; } }
     @keyframes fade { from { opacity: 0; } }
     @keyframes deslizar { from { transform: translateX(100%); } }
   `,
 })
 export class FletesComponent implements OnInit, OnDestroy {
-  private readonly pedidosSrv = inject(PedidosService);
+  readonly pedidosSrv = inject(PedidosService);
   readonly socket = inject(SocketService);
   readonly auth = inject(AuthService);
 
@@ -199,6 +230,12 @@ export class FletesComponent implements OnInit, OnDestroy {
   nuevos = new Set<string>();
   seleccionado: Pedido | null = null;
   procesando: string | null = null;
+
+  // Despacho: el bodeguero asigna chofer y unidad al sacar el flete a ruta
+  readonly choferes = ['Jorge Ramírez', 'Luis Martínez', 'Pedro Sánchez'];
+  readonly vehiculos = ['Torton NL-4521', 'Rabón NL-3307', 'Camioneta 3.5 t NL-1180'];
+  despachando: Pedido | null = null;
+  despacho = { chofer: this.choferes[0], vehiculo: this.vehiculos[0], fecha_estimada: '' };
   error = '';
   private sub?: Subscription;
 
@@ -233,9 +270,26 @@ export class FletesComponent implements OnInit, OnDestroy {
   }
 
   avanzar(p: Pedido, estado: EstadoPedido): void {
+    if (estado === 'EN_RUTA') {
+      const manana = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+      this.despacho = { chofer: this.choferes[0], vehiculo: this.vehiculos[0], fecha_estimada: manana };
+      this.despachando = p;
+      return;
+    }
+    this.enviarEstado(p, estado);
+  }
+
+  confirmarDespacho(): void {
+    const p = this.despachando;
+    if (!p) return;
+    this.despachando = null;
+    this.enviarEstado(p, 'EN_RUTA', { ...this.despacho, fecha_estimada: this.despacho.fecha_estimada || undefined });
+  }
+
+  private enviarEstado(p: Pedido, estado: EstadoPedido, despacho?: { chofer: string; vehiculo: string; fecha_estimada?: string }): void {
     this.procesando = p.uuid;
     this.error = '';
-    this.pedidosSrv.cambiarEstado(p.uuid, estado).subscribe({
+    this.pedidosSrv.cambiarEstado(p.uuid, estado, despacho).subscribe({
       next: (act) => {
         this.procesando = null;
         if (this.seleccionado?.uuid === act.uuid) this.seleccionado = act;

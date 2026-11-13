@@ -94,7 +94,21 @@ Las alertas se persisten en la tabla `alertas` (una alerta activa por tarea × m
 7. **Recibo por email:** se envía después del commit. Si el correo falla, el pedido **no** se revierte (queda `recibo_enviado_at = NULL`).
 8. **Seguimiento:** el bodeguero avanza el estado (`PENDIENTE → EN_RUTA → ENTREGADO`, nunca hacia atrás). El cliente recibe `flete_actualizado` en su sala personal.
 
-## 7. Sincronización Offline-First (futuro Flutter)
+## 7. Solicitudes de material (Residente → Bodega)
+
+1. El residente pide material para su obra (`POST /api/solicitudes`). La bodega recibe `solicitud_material` en vivo.
+2. **Aprobar** ejecuta en una transacción: verificar stock → movimiento `ENVIO_OBRA` (descuenta `inventario_central`) → solicitud `APROBADA`. Si no alcanza, responde 409 y la solicitud sigue `PENDIENTE`.
+3. **Rechazar** exige un motivo. El residente recibe `solicitud_actualizada`.
+
+## 8. Punto de reorden (stock mínimo)
+
+Cada material tiene `stock_minimo`. Si `stock_actual <= stock_minimo`, aparece como **stock bajo** en el dashboard y el inventario, y tras un pedido se emite `stock_bajo` a Admin y Bodega.
+
+## 9. Tienda pública
+
+La raíz (`/`) es la tienda: cualquiera navega el catálogo y arma su carrito. Al confirmar, el carrito pide **crear cuenta o ingresar** y regresa al carrito con los productos intactos. El público ve `disponibilidad` (no la cifra exacta de inventario); el cliente con sesión obtiene la cotización oficial del servidor.
+
+## 10. Sincronización Offline-First (futuro Flutter)
 
 - Todo `movimiento` se identifica por un **UUIDv4 generado en el cliente**. Reenviar el mismo UUID es idempotente: el servidor no lo vuelve a aplicar sobre el stock.
 - Todas las tablas tienen `created_at` / `updated_at` (ISO-8601 UTC) para que el cliente pida "cambios desde `last_sync`".

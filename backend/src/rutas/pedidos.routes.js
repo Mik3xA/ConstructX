@@ -16,6 +16,7 @@ router.post('/pedidos/cotizar', verifyToken, verifyRole(CLIENTE), h(ctrl.cotizar
 router.post('/pedidos', verifyToken, verifyRole(CLIENTE), h(ctrl.crear));
 router.get('/pedidos', verifyToken, verifyRole(CLIENTE, BODEGUERO), h(ctrl.listar));
 router.get('/pedidos/:uuid', verifyToken, verifyRole(CLIENTE, BODEGUERO), h(ctrl.obtener));
+router.get('/pedidos/:uuid/recibo', verifyToken, verifyRole(CLIENTE, BODEGUERO), h(ctrl.recibo));
 router.patch('/pedidos/:uuid/estado', verifyToken, verifyRole(BODEGUERO), h(ctrl.cambiarEstado));
 
 module.exports = router;

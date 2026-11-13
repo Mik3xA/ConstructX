@@ -33,11 +33,28 @@ const CATALOGO = [
     descripcion: 'Arena cribada para mezclas de concreto y mortero. Entrega a granel.' },
   { sku: 'GRA-M3', nombre: 'Grava 3/4"', unidad: 'm3', categoria: 'Agregados', precio: 520, foto: 'rbQWEU0HFhQ',
     descripcion: 'Grava triturada de 3/4" para concreto estructural. Entrega a granel.' },
+  { sku: 'MOR-50KG', nombre: 'Mortero para albañilería', unidad: 'bulto', categoria: 'Cementantes', precio: 189, foto: 'OiywY3XKTsQ',
+    descripcion: 'Saco de 50 kg. Para pegar block y tabique y para aplanados finos.' },
+  { sku: 'MAL-6X6', nombre: 'Malla electrosoldada 6x6 10/10', unidad: 'rollo', categoria: 'Acero', precio: 1650, foto: 'A_N61ISqiIA',
+    descripcion: 'Rollo de 2.5 x 40 m para firmes, losas y pisos de concreto.' },
+  { sku: 'ALM-REC', nombre: 'Alambre recocido calibre 16', unidad: 'kg', categoria: 'Acero', precio: 42, foto: 'XRuBqN8o7Pg',
+    descripcion: 'Para amarres de varilla y armados. Venta por kilo.' },
+  { sku: 'TAB-ROJO', nombre: 'Tabicón ligero 10x14x28', unidad: 'pieza', categoria: 'Mampostería', precio: 7.8, foto: 'EBvvPKtnrPc',
+    descripcion: 'Tabicón de concreto ligero, ideal para muros divisorios.' },
+  { sku: 'POL-4X4', nombre: 'Polín de pino 4x4" x 8 ft', unidad: 'pieza', categoria: 'Madera y cimbra', precio: 135, foto: 'yVRn-d6JGzo',
+    descripcion: 'Madera de pino de 3a para cimbra, apuntalamiento y obra negra.' },
 ];
 
 const STOCK_INICIAL = {
   'CEM-50KG': 500, 'CAL-25KG': 300, 'VAR-3/8': 1000, 'VAR-1/2': 600,
   'BLK-15': 2000, 'LAD-ROJO': 8000, 'ARE-M3': 60, 'GRA-M3': 45,
+  'MOR-50KG': 220, 'MAL-6X6': 40, 'ALM-REC': 350, 'TAB-ROJO': 3000, 'POL-4X4': 30,
+};
+
+/** Punto de reorden por material (el arranque deja a la Malla y al Polín en stock bajo). */
+const STOCK_MINIMO = {
+  'CEM-50KG': 120, 'CAL-25KG': 60, 'VAR-3/8': 200, 'VAR-1/2': 120, 'BLK-15': 400, 'LAD-ROJO': 1500,
+  'ARE-M3': 15, 'GRA-M3': 12, 'MOR-50KG': 50, 'MAL-6X6': 45, 'ALM-REC': 80, 'TAB-ROJO': 600, 'POL-4X4': 35,
 };
 
 function sembrar() {
@@ -55,9 +72,12 @@ function sembrar() {
     residente: { id: randomUUID(), email: 'residente@constructx.mx', nombre: 'Rita Residente', rol: 'residente' },
     cliente: { id: randomUUID(), email: 'cliente@constructx.mx', nombre: 'Carlos Cliente', rol: 'cliente',
       telefono: '81 1234 5678', empresa: 'Constructora del Norte', direccion: 'Av. Constitución 1500, Col. Centro, Monterrey, NL' },
+    cliente2: { id: randomUUID(), email: 'maria@obrasgarza.mx', nombre: 'María Garza', rol: 'cliente',
+      telefono: '81 8765 4321', empresa: 'Obras Garza', direccion: 'Calle Hidalgo 220, San Pedro Garza García, NL' },
   };
 
   const materiales = {};
+  let proyectoId;
 
   db.transaction(() => {
     const insUser = db.prepare(
@@ -119,6 +139,9 @@ function sembrar() {
       movimientosService.registrar({ tipo, material_id: materiales[sku], cantidad, ...extra }, usuario);
 
     for (const [sku, cant] of Object.entries(STOCK_INICIAL)) reg('INGRESO_BODEGA', sku, cant, usuarios.bodeguero);
+    const insMin = db.prepare('UPDATE inventario_central SET stock_minimo = ? WHERE material_id = ?');
+    for (const [sku, min] of Object.entries(STOCK_MINIMO)) insMin.run(min, materiales[sku]);
+    proyectoId = proyecto;
 
     reg('ENVIO_OBRA', 'CEM-50KG', 50, usuarios.bodeguero, { proyecto_id: proyecto });
     reg('ENVIO_OBRA', 'VAR-3/8', 200, usuarios.bodeguero, { proyecto_id: proyecto });
@@ -144,7 +167,7 @@ function sembrar() {
     },
     opciones
   );
-  pedidosService.cambiarEstado(entregado.uuid, 'EN_RUTA', usuarios.bodeguero, opciones);
+  pedidosService.cambiarEstado(entregado.uuid, 'EN_RUTA', usuarios.bodeguero, { ...opciones, chofer: 'Jorge Ramírez', vehiculo: 'Torton NL-4521' });
   pedidosService.cambiarEstado(entregado.uuid, 'ENTREGADO', usuarios.bodeguero, opciones);
 
   pedidosService.crear(
@@ -158,6 +181,47 @@ function sembrar() {
     },
     opciones
   );
+
+  // ---------- Historial de ventas de las últimas 2 semanas (para el reporte del Admin) ----------
+  const historial = [
+    [13, usuarios.cliente2, [['CEM-50KG', 30], ['ARE-M3', 4]]],
+    [12, usuarios.cliente, [['BLK-15', 250]]],
+    [10, usuarios.cliente2, [['VAR-1/2', 40], ['ALM-REC', 25]]],
+    [9, usuarios.cliente, [['MOR-50KG', 20], ['CAL-25KG', 15]]],
+    [7, usuarios.cliente2, [['TAB-ROJO', 400], ['MOR-50KG', 10]]],
+    [6, usuarios.cliente, [['CEM-50KG', 25], ['GRA-M3', 3]]],
+    [4, usuarios.cliente2, [['VAR-3/8', 80], ['MAL-6X6', 2]]],
+    [3, usuarios.cliente, [['LAD-ROJO', 1200]]],
+    [2, usuarios.cliente2, [['CEM-50KG', 15], ['POL-4X4', 4]]],
+    [1, usuarios.cliente, [['ARE-M3', 2], ['GRA-M3', 2], ['CEM-50KG', 10]]],
+  ];
+  for (const [diasAtras, cliente, lineas] of historial) {
+    const p = pedidosService.crear(
+      cliente,
+      { items: lineas.map(([sku, cantidad]) => ({ material_id: materiales[sku], cantidad })) },
+      opciones
+    );
+    pedidosService.cambiarEstado(p.uuid, 'EN_RUTA', usuarios.bodeguero, { ...opciones, chofer: 'Jorge Ramírez', vehiculo: 'Torton NL-4521' });
+    pedidosService.cambiarEstado(p.uuid, 'ENTREGADO', usuarios.bodeguero, opciones);
+    const ts = new Date(Date.now() - diasAtras * 86400000).toISOString();
+    db.prepare('UPDATE pedidos_fletes SET timestamp = ?, created_at = ? WHERE uuid = ?').run(ts, ts, p.uuid);
+  }
+
+  // ---------- Solicitud de material pendiente del residente ----------
+  require('../servicios/solicitudes.service').crear(
+    usuarios.residente,
+    { proyecto_id: proyectoId, material_id: materiales['VAR-1/2'], cantidad: 60, notas: 'Para columnas de planta baja' },
+    opciones
+  );
+
+  // ---------- Mensaje de contacto de ejemplo ----------
+  require('../modelos/mensaje.model').create({
+    nombre: 'Luis Treviño',
+    email: 'luis@ejemplo.mx',
+    telefono: '81 5555 0101',
+    asunto: 'Cotización por volumen',
+    mensaje: 'Hola, necesito cotizar 800 bultos de cemento para una obra en Apodaca. ¿Manejan precio por volumen?',
+  });
 
   const { activas } = alertasService.auditar();
   return { usuarios, materiales, alertasActivas: activas };

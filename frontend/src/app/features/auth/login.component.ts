@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { mensajeError } from '../../core/utils/http-error';
@@ -11,7 +11,7 @@ type Modo = 'login' | 'registro';
 @Component({
   selector: 'cx-login',
   standalone: true,
-  imports: [ReactiveFormsModule, AsyncPipe],
+  imports: [ReactiveFormsModule, AsyncPipe, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -20,8 +20,11 @@ export class LoginComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   readonly theme = inject(ThemeService);
+  private readonly route = inject(ActivatedRoute);
 
-  modo: Modo = 'login';
+  modo: Modo = this.route.snapshot.queryParamMap.get('modo') === 'registro' ? 'registro' : 'login';
+  /** A dónde regresar después de entrar (solo rutas internas). */
+  private readonly volver = this.route.snapshot.queryParamMap.get('volver') ?? '';
   cargando = false;
   error = '';
 
@@ -70,11 +73,19 @@ export class LoginComponent {
     this.ejecutar(this.auth.registrar(this.registroForm.getRawValue()));
   }
 
+  /** Cliente: vuelve a donde estaba (p. ej. el carrito). Personal: a su panel. */
+  private destino(): string {
+    const seguro = this.volver.startsWith('/') && !this.volver.startsWith('//');
+    if (!seguro) return this.auth.homeUrl();
+    const esPanel = this.volver.startsWith('/panel');
+    return this.auth.esCliente !== esPanel ? this.volver : this.auth.homeUrl();
+  }
+
   private ejecutar(obs: ReturnType<AuthService['login']>): void {
     this.cargando = true;
     this.error = '';
     obs.subscribe({
-      next: () => this.router.navigateByUrl(this.auth.homeUrl()),
+      next: () => this.router.navigateByUrl(this.destino()),
       error: (e) => {
         this.error = mensajeError(e);
         this.cargando = false;

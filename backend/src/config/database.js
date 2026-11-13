@@ -4,7 +4,7 @@ const Database = require('better-sqlite3');
 const { DB_PATH } = require('./env');
 
 /** Versión del esquema. Súbela cuando cambie schema.sql de forma incompatible. */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new Database(DB_PATH);

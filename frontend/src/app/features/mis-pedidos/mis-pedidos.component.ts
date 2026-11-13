@@ -1,8 +1,10 @@
 import { AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { EstadoPedido, Pedido } from '../../core/models/models';
+import { CarritoService } from '../../core/services/carrito.service';
 import { PedidosService } from '../../core/services/pedidos.service';
+import { PublicoService } from '../../core/services/publico.service';
 import { mensajeError } from '../../core/utils/http-error';
 import { EstadoPedidoComponent } from '../../shared/components/estado-pedido/estado-pedido.component';
 import { MaterialImgComponent } from '../../shared/components/material-img/material-img.component';
@@ -15,16 +17,7 @@ const PASOS: EstadoPedido[] = ['PENDIENTE', 'EN_RUTA', 'ENTREGADO'];
   standalone: true,
   imports: [AsyncPipe, CurrencyPipe, DatePipe, DecimalPipe, RouterLink, EstadoPedidoComponent, MaterialImgComponent],
   template: `
-    <div class="page">
-      <header class="page__header">
-        <div>
-          <span class="eyebrow">Portal de clientes</span>
-          <h1>Mis pedidos</h1>
-          <p>El estado de cada flete se actualiza automáticamente.</p>
-        </div>
-        <a class="btn btn--primary" routerLink="/catalogo">Nuevo pedido</a>
-      </header>
-
+    <div class="mis-pedidos">
       @if (error) { <div class="banner banner--error">{{ error }}</div> }
 
       @if (pedidos$ | async; as pedidos) {
@@ -63,6 +56,13 @@ const PASOS: EstadoPedido[] = ['PENDIENTE', 'EN_RUTA', 'ENTREGADO'];
                     <div class="sum">
                       <span>Flete: <b class="mono">{{ d.costo_flete === 0 ? 'Gratis' : (d.costo_flete | currency: 'MXN' : 'symbol-narrow') }}</b></span>
                       <span>Entrega: {{ d.direccion_entrega }}</span>
+                      @if (d.chofer) { <span data-testid="chofer">Chofer: <b>{{ d.chofer }}</b> · Unidad: {{ d.vehiculo }}</span> }
+                      @if (d.fecha_estimada && d.estado !== 'ENTREGADO') { <span>Entrega estimada: <b>{{ d.fecha_estimada }}</b></span> }
+                      @if (d.entregado_at) { <span>Entregado: {{ d.entregado_at | date: 'd MMM y, HH:mm' }}</span> }
+                    </div>
+                    <div class="acciones">
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="pedidosSrv.abrirRecibo(d.uuid)">Ver recibo</button>
+                      <button type="button" class="btn btn--soft btn--sm" (click)="repetir(d)" data-testid="repetir">Volver a pedir</button>
                     </div>
                   } @else {
                     <div class="skeleton" style="height: 80px"></div>
@@ -170,14 +170,18 @@ const PASOS: EstadoPedido[] = ['PENDIENTE', 'EN_RUTA', 'ENTREGADO'];
       span.muted { font-size: 0.8rem; }
     }
     .line__img { width: 44px; height: 44px; border-radius: $radius-sm; }
-    .sum { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted); }
+    .sum { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted); b { color: var(--text); } }
+    .acciones { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
 
     @keyframes abrir { from { opacity: 0; transform: translateY(-6px); } }
   `,
 })
 export class MisPedidosComponent implements OnInit {
-  private readonly pedidos = inject(PedidosService);
-  readonly pedidos$ = this.pedidos.pedidos$;
+  readonly pedidosSrv = inject(PedidosService);
+  private readonly publico = inject(PublicoService);
+  private readonly carrito = inject(CarritoService);
+  private readonly router = inject(Router);
+  readonly pedidos$ = this.pedidosSrv.pedidos$;
   readonly pasos = PASOS;
   readonly etiqueta: Record<EstadoPedido, string> = { PENDIENTE: 'Recibido', EN_RUTA: 'En ruta', ENTREGADO: 'Entregado' };
 
@@ -186,7 +190,18 @@ export class MisPedidosComponent implements OnInit {
   error = '';
 
   ngOnInit(): void {
-    this.pedidos.cargar().subscribe({ error: (e) => (this.error = mensajeError(e)) });
+    this.pedidosSrv.cargar().subscribe({ error: (e) => (this.error = mensajeError(e)) });
+  }
+
+  /** Copia las líneas del pedido al carrito con los precios ACTUALES del catálogo. */
+  repetir(p: Pedido): void {
+    this.publico.catalogo().subscribe((c) => {
+      for (const d of p.detalles ?? []) {
+        const m = c.materiales.find((x) => x.id === d.material_id);
+        if (m && m.disponibilidad !== 'AGOTADO') this.carrito.agregar(m, d.cantidad);
+      }
+      this.router.navigateByUrl('/carrito');
+    });
   }
 
   indice(e: EstadoPedido): number {
@@ -196,7 +211,7 @@ export class MisPedidosComponent implements OnInit {
   alternar(p: Pedido): void {
     this.abierto = this.abierto === p.uuid ? null : p.uuid;
     if (this.abierto && !this.detalle[p.uuid]) {
-      this.pedidos.obtener(p.uuid).subscribe({
+      this.pedidosSrv.obtener(p.uuid).subscribe({
         next: (d) => (this.detalle[p.uuid] = d),
         error: (e) => (this.error = mensajeError(e)),
       });

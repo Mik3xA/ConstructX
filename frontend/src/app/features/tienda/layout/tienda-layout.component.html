@@ -1,0 +1,147 @@
+<div class="tienda">
+  <main class="tienda__main">
+    <!-- Barra superior -->
+    <div class="topbar">
+      <div class="wrap topbar__in">
+        <span class="topbar__item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" /></svg>
+          <span>Flete <b>gratis</b> en pedidos desde $25,000</span>
+        </span>
+        <span class="topbar__item hide-sm">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          {{ empresa.horario }}
+        </span>
+        <a class="topbar__item" [href]="empresa.telefonoLink">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z" /></svg>
+          {{ empresa.telefono }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Encabezado -->
+    <header class="header">
+      <div class="wrap header__in">
+        <button class="icon-btn menu-btn" type="button" (click)="menuAbierto = !menuAbierto" [attr.aria-expanded]="menuAbierto" aria-label="Menú">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+        </button>
+
+        <a class="logo" routerLink="/" aria-label="ConstructX inicio">
+          <img src="assets/logo.svg" alt="" width="38" height="38" />
+          <span>Construct<b>X</b></span>
+        </a>
+
+        <form class="search" role="search" (ngSubmit)="buscar()">
+          <input class="input" type="search" name="q" [(ngModel)]="busqueda" placeholder="¿Qué necesitas para tu obra?" aria-label="Buscar productos" />
+          <button type="submit" class="search__btn" aria-label="Buscar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          </button>
+        </form>
+
+        <div class="actions">
+          <button type="button" class="icon-btn" (click)="theme.alternar()" aria-label="Cambiar tema" data-testid="toggle-tema">
+            @if ((theme.tema$ | async) === 'dark') {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>
+            }
+          </button>
+
+          @if (auth.user$ | async; as u) {
+            <div class="cuenta">
+              <button type="button" class="cuenta__btn" (click)="cuentaAbierta = !cuentaAbierta" [attr.aria-expanded]="cuentaAbierta" data-testid="menu-cuenta">
+                <span class="cuenta__avatar">{{ u.nombre.charAt(0) }}</span>
+                <span class="cuenta__txt"><small>Hola,</small>{{ u.nombre.split(' ')[0] }}</span>
+              </button>
+              @if (cuentaAbierta) {
+                <div class="cuenta__menu" role="menu">
+                  @if (u.rol === 'cliente') {
+                    <a routerLink="/mi-cuenta" role="menuitem">Mis pedidos</a>
+                    <a routerLink="/mi-cuenta" [queryParams]="{ tab: 'perfil' }" role="menuitem">Mi perfil</a>
+                  } @else {
+                    <a [routerLink]="auth.homeUrl()" role="menuitem">Ir al panel</a>
+                  }
+                  <button type="button" (click)="salir()" role="menuitem">Cerrar sesión</button>
+                </div>
+              }
+            </div>
+          } @else {
+            <a class="btn btn--ghost btn--sm hide-sm" routerLink="/acceso" data-testid="ingresar">Ingresar</a>
+            <a class="btn btn--soft btn--sm hide-sm" routerLink="/acceso" [queryParams]="{ modo: 'registro' }">Crear cuenta</a>
+            <a class="icon-btn show-sm" routerLink="/acceso" aria-label="Ingresar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+            </a>
+          }
+
+          <a class="cart" routerLink="/carrito" aria-label="Carrito" data-testid="ir-carrito">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 8H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" /></svg>
+            @if (carrito.totalPiezas$ | async; as n) { <span class="cart__n" data-testid="badge-carrito">{{ n }}</span> }
+            <span class="cart__total hide-sm mono">{{ (carrito.subtotal$ | async) ?? 0 | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</span>
+          </a>
+        </div>
+      </div>
+
+      <nav class="nav" [class.is-open]="menuAbierto" aria-label="Principal">
+        <div class="wrap nav__in">
+          <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+          <div class="nav__drop">
+            <a routerLink="/catalogo" routerLinkActive="is-active">Productos</a>
+            <div class="nav__panel">
+              @for (c of categorias; track c) {
+                <a routerLink="/catalogo" [queryParams]="{ categoria: c }">{{ c }}</a>
+              }
+            </div>
+          </div>
+          <a routerLink="/nosotros" routerLinkActive="is-active">Nosotros</a>
+          <a routerLink="/preguntas-frecuentes" routerLinkActive="is-active">Preguntas frecuentes</a>
+          <a routerLink="/contacto" routerLinkActive="is-active">Contacto</a>
+          @if (auth.esCliente) {
+            <a routerLink="/mi-cuenta" routerLinkActive="is-active" class="nav__cta">Mis pedidos</a>
+          }
+        </div>
+      </nav>
+    </header>
+
+    <router-outlet />
+
+    <!-- Pie de página -->
+    <footer class="footer">
+      <div class="wrap footer__cta">
+        <div>
+          <h3>¿Obra grande o pedido recurrente?</h3>
+          <p>Te armamos una cotización por volumen con entrega programada.</p>
+        </div>
+        <a class="btn btn--primary btn--lg" routerLink="/contacto">Solicitar cotización</a>
+      </div>
+      <div class="wrap footer__grid">
+        <div class="footer__brand">
+          <a class="logo" routerLink="/"><img src="assets/logo.svg" alt="" width="34" height="34" /><span>Construct<b>X</b></span></a>
+          <p>{{ empresa.lema }}</p>
+        </div>
+        <div>
+          <h4>Tienda</h4>
+          @for (c of categorias; track c) { <a routerLink="/catalogo" [queryParams]="{ categoria: c }">{{ c }}</a> }
+        </div>
+        <div>
+          <h4>Empresa</h4>
+          <a routerLink="/nosotros">Sobre nosotros</a>
+          <a routerLink="/preguntas-frecuentes">Preguntas frecuentes</a>
+          <a routerLink="/contacto">Contacto</a>
+          <a routerLink="/acceso">Acceso para clientes y personal</a>
+        </div>
+        <div>
+          <h4>Contacto</h4>
+          <span>{{ empresa.direccion }}</span>
+          <a [href]="empresa.telefonoLink">{{ empresa.telefono }}</a>
+          <a [href]="'mailto:' + empresa.email">{{ empresa.email }}</a>
+          <span>{{ empresa.horario }}</span>
+        </div>
+      </div>
+      <div class="wrap footer__bottom">
+        <span>© {{ anio }} {{ empresa.nombre }}. Precios en MXN sin IVA, sujetos a cambio sin previo aviso.</span>
+        <span>Pago contra entrega · Facturación electrónica</span>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<cx-toast-container />

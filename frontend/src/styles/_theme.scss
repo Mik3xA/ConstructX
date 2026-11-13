@@ -43,6 +43,10 @@
   --danger: #b93a0b;
   --danger-soft: #fde8de;
 
+  // Gráficas (validado con dataviz/validate_palette.js contra #ffffff)
+  --chart-bar: #e2600f;
+  --chart-grid: #ece5da;
+
   --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.06);
   --shadow: 0 8px 24px rgba(60, 40, 20, 0.08);
   --shadow-lg: 0 20px 50px rgba(60, 40, 20, 0.14);
@@ -79,6 +83,10 @@
 
   --danger: #ff8a5c;
   --danger-soft: #3d2016;
+
+  // Gráficas (validado contra #1e1e1e: el naranja de UI es demasiado claro para marcas)
+  --chart-bar: #e06a22;
+  --chart-grid: #2e2b28;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);

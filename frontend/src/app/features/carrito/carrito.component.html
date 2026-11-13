@@ -1,4 +1,4 @@
-<div class="page">
+<div class="wrap page-c">
   @if (confirmado; as p) {
     <section class="success card" data-testid="pedido-confirmado">
       <div class="success__icon" aria-hidden="true">
@@ -16,17 +16,15 @@
       </dl>
 
       <div class="success__actions">
-        <a class="btn btn--primary" routerLink="/mis-pedidos">Seguir mi pedido</a>
+        <a class="btn btn--primary" routerLink="/mi-cuenta">Seguir mi pedido</a>
         <a class="btn btn--ghost" routerLink="/catalogo">Seguir comprando</a>
       </div>
     </section>
   } @else {
-    <header class="page__header">
-      <div>
-        <span class="eyebrow">Carrito de fletes</span>
-        <h1>Tu pedido</h1>
-        <p>Revisa cantidades y la dirección de entrega antes de confirmar.</p>
-      </div>
+    <header class="head">
+      <span class="eyebrow">Carrito de fletes</span>
+      <h1>Tu pedido</h1>
+      <p class="muted">Revisa cantidades y la dirección de entrega antes de confirmar.</p>
     </header>
 
     @if (carrito.items$ | async; as items) {
@@ -37,22 +35,14 @@
               <div class="item" [class.has-error]="faltante(i.material.id)" data-testid="item-carrito">
                 <cx-material-img class="item__img" [url]="i.material.imagen_url" [categoria]="i.material.categoria" [alt]="i.material.nombre" />
                 <div class="item__info">
-                  <strong>{{ i.material.nombre }}</strong>
+                  <a [routerLink]="['/producto', i.material.codigo_sku]"><strong>{{ i.material.nombre }}</strong></a>
                   <span class="muted">{{ i.material.precio_unitario | currency: 'MXN' : 'symbol-narrow' }} / {{ i.material.unidad }}</span>
                   @if (faltante(i.material.id); as f) {
                     <span class="text-danger small">Solo hay {{ f.disponible | number: '1.0-2' }} disponibles</span>
                   }
                 </div>
                 <div class="item__qty">
-                  <input
-                    class="input mono"
-                    type="number"
-                    min="1"
-                    [max]="i.material.stock_disponible"
-                    [ngModel]="i.cantidad"
-                    (ngModelChange)="cambiar(i, $event)"
-                    [attr.aria-label]="'Cantidad de ' + i.material.nombre"
-                  />
+                  <input class="input mono" type="number" min="1" [ngModel]="i.cantidad" (ngModelChange)="cambiar(i, $event)" [attr.aria-label]="'Cantidad de ' + i.material.nombre" />
                   <span class="muted">{{ i.material.unidad }}</span>
                 </div>
                 <strong class="item__subtotal mono">{{ i.cantidad * i.material.precio_unitario | currency: 'MXN' : 'symbol-narrow' }}</strong>
@@ -61,46 +51,68 @@
                 </button>
               </div>
             }
+            <a routerLink="/catalogo" class="seguir">← Seguir comprando</a>
           </section>
 
           <aside class="summary">
-            <section class="card">
-              <h2>Entrega</h2>
-              <div class="field">
-                <label for="dir">Dirección de entrega</label>
-                <textarea id="dir" class="textarea" rows="2" [(ngModel)]="direccion" placeholder="Calle, número, colonia, ciudad" required></textarea>
-              </div>
-              <div class="field">
-                <label for="tel">Teléfono de contacto</label>
-                <input id="tel" class="input" type="tel" [(ngModel)]="telefono" />
-              </div>
-              <div class="field">
-                <label for="notas">Notas para el chofer (opcional)</label>
-                <input id="notas" class="input" [(ngModel)]="notas" maxlength="500" placeholder="Ej. entrar por la calle lateral" />
-              </div>
-            </section>
+            @if (esCliente) {
+              <section class="card">
+                <h2>Entrega</h2>
+                <div class="field">
+                  <label for="dir">Dirección de entrega</label>
+                  <textarea id="dir" class="textarea" rows="2" [(ngModel)]="direccion" placeholder="Calle, número, colonia, ciudad" required></textarea>
+                </div>
+                <div class="field">
+                  <label for="tel">Teléfono de contacto</label>
+                  <input id="tel" class="input" type="tel" [(ngModel)]="telefono" />
+                </div>
+                <div class="field">
+                  <label for="notas">Notas para el chofer (opcional)</label>
+                  <input id="notas" class="input" [(ngModel)]="notas" maxlength="500" placeholder="Ej. entrar por la calle lateral" />
+                </div>
+              </section>
 
-            <section class="card totals" [class.is-loading]="cotizando">
-              <div class="row"><span>Subtotal materiales</span><span class="mono">{{ (cotizacion?.subtotal ?? 0) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
-              <div class="row">
-                <span>Costo del flete</span>
-                <span class="mono" data-testid="costo-flete">
-                  @if (cotizacion && cotizacion.costo_flete === 0) { <span class="chip chip--olive">Gratis</span> }
-                  @else { {{ (cotizacion?.costo_flete ?? 0) | currency: 'MXN' : 'symbol-narrow' }} }
-                </span>
-              </div>
-              <div class="row row--total"><span>Total a pagar</span><span class="mono" data-testid="total">{{ (cotizacion?.total_pagar ?? 0) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
-              <p class="muted small">Pago contra entrega. Flete gratis en pedidos desde $25,000.</p>
+              <section class="card totals" [class.is-loading]="cotizando">
+                <div class="row"><span>Subtotal materiales</span><span class="mono">{{ (cotizacion?.subtotal ?? 0) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
+                <div class="row">
+                  <span>Costo del flete</span>
+                  <span class="mono" data-testid="costo-flete">
+                    @if (cotizacion && cotizacion.costo_flete === 0) { <span class="chip chip--olive">Gratis</span> }
+                    @else { {{ (cotizacion?.costo_flete ?? 0) | currency: 'MXN' : 'symbol-narrow' }} }
+                  </span>
+                </div>
+                <div class="row row--total"><span>Total a pagar</span><span class="mono" data-testid="total">{{ (cotizacion?.total_pagar ?? 0) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
+                <p class="muted small">Pago contra entrega. Flete gratis en pedidos desde $25,000.</p>
 
-              @if (cotizacion?.faltantes?.length) {
-                <div class="banner banner--error">Ajusta las cantidades marcadas: no hay suficiente existencia.</div>
-              }
-              @if (error) { <div class="banner banner--error" data-testid="error-pedido">{{ error }}</div> }
+                @if (cotizacion?.faltantes?.length) {
+                  <div class="banner banner--error">Ajusta las cantidades marcadas: no hay suficiente existencia.</div>
+                }
+                @if (error) { <div class="banner banner--error" data-testid="error-pedido">{{ error }}</div> }
 
-              <button class="btn btn--primary btn--lg btn--block" type="button" (click)="confirmar()" [disabled]="!puedeConfirmar" data-testid="confirmar">
-                {{ enviando ? 'Confirmando…' : 'Confirmar pedido de flete' }}
-              </button>
-            </section>
+                <button class="btn btn--primary btn--lg btn--block" type="button" (click)="confirmar()" [disabled]="!puedeConfirmar" data-testid="confirmar">
+                  {{ enviando ? 'Confirmando…' : 'Confirmar pedido de flete' }}
+                </button>
+              </section>
+            } @else {
+              <!-- Visitante o cuenta interna: estimación local -->
+              <section class="card totals">
+                @if (info$ | async; as info) {
+                  <div class="row"><span>Subtotal materiales</span><span class="mono">{{ (carrito.subtotal$ | async) ?? 0 | currency: 'MXN' : 'symbol-narrow' }}</span></div>
+                  <div class="row"><span>Flete estimado</span><span class="mono" data-testid="flete-estimado">{{ estimarFlete(((carrito.subtotal$ | async) ?? 0), info.tarifa_flete) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
+                  <div class="row row--total"><span>Total estimado</span><span class="mono">{{ ((carrito.subtotal$ | async) ?? 0) + estimarFlete(((carrito.subtotal$ | async) ?? 0), info.tarifa_flete) | currency: 'MXN' : 'symbol-narrow' }}</span></div>
+                }
+                @if (auth.user) {
+                  <div class="banner banner--info">Las cuentas del equipo interno no hacen pedidos de flete. Inicia sesión con una cuenta de cliente.</div>
+                } @else {
+                  <div class="gate" data-testid="gate-registro">
+                    <strong>Crea tu cuenta para hacer tu pedido</strong>
+                    <span>Tu carrito se conserva. Solo te pedimos tus datos y la dirección de tu obra.</span>
+                    <a class="btn btn--primary btn--lg btn--block" routerLink="/acceso" [queryParams]="{ modo: 'registro', volver: '/carrito' }" data-testid="crear-cuenta-carrito">Crear cuenta y continuar</a>
+                    <a class="btn btn--ghost btn--block" routerLink="/acceso" [queryParams]="{ volver: '/carrito' }">Ya tengo cuenta · Ingresar</a>
+                  </div>
+                }
+              </section>
+            }
           </aside>
         </div>
       } @else {

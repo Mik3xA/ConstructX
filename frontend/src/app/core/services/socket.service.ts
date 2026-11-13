@@ -2,7 +2,7 @@ import { Injectable, NgZone, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, filter, map } from 'rxjs';
 import { Socket, io } from 'socket.io-client';
 import { SOCKET_URL } from '../api.config';
-import { Alerta, Pedido } from '../models/models';
+import { Alerta, MensajeContacto, Pedido, SolicitudMaterial, StockBajo } from '../models/models';
 import { AuthService } from './auth.service';
 
 /** Eventos que emite el backend (ver backend/src/servicios/socket.service.js). */
@@ -11,6 +11,10 @@ export interface EventosServidor {
   flete_actualizado: Pedido;
   inventario_actualizado: { materiales: string[] };
   alerta_naranja: Alerta;
+  solicitud_material: SolicitudMaterial;
+  solicitud_actualizada: SolicitudMaterial;
+  stock_bajo: StockBajo[];
+  mensaje_contacto: MensajeContacto;
 }
 
 type NombreEvento = keyof EventosServidor;
@@ -49,7 +53,16 @@ export class SocketService implements OnDestroy {
     this.socket.on('disconnect', () => this.zone.run(() => this.conectadoSubject.next(false)));
     this.socket.on('connect_error', () => this.zone.run(() => this.conectadoSubject.next(false)));
 
-    const nombres: NombreEvento[] = ['nuevo_flete', 'flete_actualizado', 'inventario_actualizado', 'alerta_naranja'];
+    const nombres: NombreEvento[] = [
+      'nuevo_flete',
+      'flete_actualizado',
+      'inventario_actualizado',
+      'alerta_naranja',
+      'solicitud_material',
+      'solicitud_actualizada',
+      'stock_bajo',
+      'mensaje_contacto',
+    ];
     for (const nombre of nombres) {
       // Re-entrar en la zona de Angular para que la vista se actualice sin recargar
       this.socket.on(nombre, (payload: unknown) => this.zone.run(() => this.eventos.next({ nombre, payload })));

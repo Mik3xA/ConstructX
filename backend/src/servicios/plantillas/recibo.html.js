@@ -13,6 +13,8 @@ const COLORES = {
   tostado: '#C98F2E',
 };
 
+const ESTADOS = { PENDIENTE: 'Pendiente', EN_RUTA: 'En ruta', ENTREGADO: 'Entregado' };
+
 const esc = (v) =>
   String(v ?? '')
     .replace(/&/g, '&amp;')
@@ -93,7 +95,7 @@ function renderRecibo(pedido) {
           </td>
           <td style="padding:14px 16px;font-size:13px;">
             <div style="color:${COLORES.suave};">Estado</div>
-            <div style="font-weight:700;color:${COLORES.naranja};">Pendiente</div>
+            <div style="font-weight:700;color:${COLORES.naranja};">${ESTADOS[pedido.estado] || 'Pendiente'}</div>
           </td>
         </tr>
       </table>
@@ -118,6 +120,7 @@ function renderRecibo(pedido) {
         <div>${esc(pedido.direccion_entrega)}</div>
         ${pedido.telefono_contacto ? `<div style="color:${COLORES.suave};">Tel. ${esc(pedido.telefono_contacto)}</div>` : ''}
         ${pedido.notas ? `<div style="color:${COLORES.suave};margin-top:6px;">Notas: ${esc(pedido.notas)}</div>` : ''}
+        ${pedido.chofer ? `<div style="color:${COLORES.suave};margin-top:6px;">Chofer: ${esc(pedido.chofer)} · Unidad: ${esc(pedido.vehiculo)}</div>` : ''}
       </div>
     </td></tr>
     <tr><td style="padding:18px 4px;font-size:12px;color:${COLORES.suave};line-height:1.5;text-align:center;">

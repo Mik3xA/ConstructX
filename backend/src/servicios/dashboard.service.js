@@ -1,6 +1,9 @@
 const { db } = require('../config/database');
 const AlertaModel = require('../modelos/alerta.model');
 const PedidoModel = require('../modelos/pedido.model');
+const MaterialModel = require('../modelos/material.model');
+const MensajeModel = require('../modelos/mensaje.model');
+const SolicitudModel = require('../modelos/solicitud.model');
 
 /** KPIs del panel del Admin. */
 function resumen() {
@@ -50,6 +53,9 @@ function resumen() {
     kpis,
     comercial: PedidoModel.resumen(),
     pedidos_recientes: PedidoModel.list({ limit: 8 }),
+    stock_bajo: MaterialModel.stockBajo(),
+    mensajes_sin_leer: MensajeModel.sinLeer(),
+    solicitudes_pendientes: SolicitudModel.pendientes(),
     proyectos,
     stock,
     alertas: AlertaModel.list({ estado: 'ACTIVA' }),

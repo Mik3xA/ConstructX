@@ -27,6 +27,7 @@ module.exports = {
     if ('precio_unitario' in b && !(Number(b.precio_unitario) >= 0)) {
       throw new HttpError(400, 'precio_unitario debe ser un número >= 0');
     }
+    if (b.imagen_url && !/^https?:\/\//.test(b.imagen_url)) throw new HttpError(400, 'imagen_url debe ser una URL http(s)');
     res.json(MaterialModel.update(req.params.id, b));
   },
 };

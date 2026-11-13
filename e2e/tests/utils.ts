@@ -3,7 +3,7 @@ import { Browser, Page, expect } from '@playwright/test';
 export const PASSWORD = 'ConstructX123!';
 
 export async function entrar(page: Page, email: string, rutaEsperada: RegExp) {
-  await page.goto('/login');
+  await page.goto('/acceso');
   await page.getByLabel('Correo').fill(email);
   await page.getByLabel('Contraseña').fill(PASSWORD);
   await page.getByRole('button', { name: 'Entrar' }).click();

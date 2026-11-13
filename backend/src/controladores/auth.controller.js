@@ -26,6 +26,7 @@ async function login(req, res) {
   // Comparar siempre para no filtrar si el email existe por diferencia de tiempos.
   const ok = await bcrypt.compare(String(password), user ? user.password_hash : DUMMY_HASH);
   if (!user || !ok) throw new HttpError(401, 'Credenciales inválidas');
+  if (!user.activo) throw new HttpError(403, 'Tu cuenta está desactivada. Contacta al administrador.');
 
   const { password_hash, ...publico } = user; // eslint-disable-line no-unused-vars
   res.json({ token: firmarToken(publico), user: publico });
@@ -76,9 +77,30 @@ function me(req, res) {
   res.json(user);
 }
 
+/** PATCH /api/auth/me  — el usuario edita su perfil (no su rol ni su estado). */
+async function actualizarPerfil(req, res) {
+  const { nombre, telefono, empresa, direccion, password_actual, password_nueva } = req.body || {};
+  if (nombre !== undefined && !String(nombre).trim()) throw new HttpError(400, 'nombre no puede quedar vacío');
+  if (password_nueva) {
+    if (String(password_nueva).length < 8) throw new HttpError(400, 'La nueva contraseña debe tener al menos 8 caracteres');
+    const completo = UserModel.findByEmail(req.user.email);
+    if (!completo || !(await bcrypt.compare(String(password_actual || ''), completo.password_hash))) {
+      throw new HttpError(400, 'La contraseña actual no es correcta');
+    }
+    UserModel.setPassword(req.user.id, await bcrypt.hash(String(password_nueva), 10));
+  }
+  const user = UserModel.update(req.user.id, {
+    nombre: nombre !== undefined ? String(nombre).trim() : undefined,
+    telefono,
+    empresa,
+    direccion,
+  });
+  res.json(user);
+}
+
 /** GET /api/auth/users  (Admin) */
 function listUsers(req, res) {
   res.json(UserModel.list());
 }
 
-module.exports = { login, register, registroCliente, me, listUsers };
+module.exports = { login, register, registroCliente, me, actualizarPerfil, listUsers };

@@ -32,6 +32,10 @@ const ICONOS = {
   catalogo: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   carrito: 'M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21 8H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
   pedidos: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  reportes: 'M3 3v18h18M7 15v2M11 11v6M15 7v10M19 13v4',
+  solicitudes: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M12 18v-6M9 15h6',
+  usuarios: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',
+  mensajes: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
 };
 
 /** Layout Full-Page: barra lateral + área de contenido + toasts globales. */
@@ -51,13 +55,15 @@ export class ShellComponent implements OnInit {
   readonly etiquetaRol = ETIQUETA_ROL;
 
   private readonly nav: NavItem[] = [
-    { ruta: '/dashboard', etiqueta: 'Dashboard', roles: ['admin'], icono: ICONOS.dashboard },
-    { ruta: '/fletes', etiqueta: 'Pedidos de flete', roles: ['admin', 'bodeguero'], icono: ICONOS.fletes },
-    { ruta: '/bodega', etiqueta: 'Bodega', roles: ['admin', 'bodeguero'], icono: ICONOS.bodega },
-    { ruta: '/campo', etiqueta: 'Reporte de campo', roles: ['admin', 'residente'], icono: ICONOS.campo },
-    { ruta: '/catalogo', etiqueta: 'Catálogo', roles: ['cliente'], icono: ICONOS.catalogo },
-    { ruta: '/carrito', etiqueta: 'Carrito', roles: ['cliente'], icono: ICONOS.carrito, badgeCarrito: true },
-    { ruta: '/mis-pedidos', etiqueta: 'Mis pedidos', roles: ['cliente'], icono: ICONOS.pedidos },
+    { ruta: '/panel/dashboard', etiqueta: 'Dashboard', roles: ['admin'], icono: ICONOS.dashboard },
+    { ruta: '/panel/reportes', etiqueta: 'Reportes de ventas', roles: ['admin'], icono: ICONOS.reportes },
+    { ruta: '/panel/fletes', etiqueta: 'Pedidos de flete', roles: ['admin', 'bodeguero'], icono: ICONOS.fletes },
+    { ruta: '/panel/bodega', etiqueta: 'Inventario', roles: ['admin', 'bodeguero'], icono: ICONOS.bodega },
+    { ruta: '/panel/solicitudes', etiqueta: 'Solicitudes de obra', roles: ['admin', 'bodeguero', 'residente'], icono: ICONOS.solicitudes },
+    { ruta: '/panel/campo', etiqueta: 'Reporte de campo', roles: ['admin', 'residente'], icono: ICONOS.campo },
+    { ruta: '/panel/productos', etiqueta: 'Productos', roles: ['admin'], icono: ICONOS.catalogo },
+    { ruta: '/panel/usuarios', etiqueta: 'Usuarios', roles: ['admin'], icono: ICONOS.usuarios },
+    { ruta: '/panel/mensajes', etiqueta: 'Mensajes', roles: ['admin'], icono: ICONOS.mensajes },
   ];
 
   get items(): NavItem[] {

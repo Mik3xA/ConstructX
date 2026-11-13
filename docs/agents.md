@@ -46,11 +46,13 @@ Cualquier IA que lea este repositorio **debe acatar estrictamente** las siguient
 
 ### Datos y seguridad
 - **NO** usar IDs autoincrementales para `movimientos` ni `pedidos_fletes`: siempre UUIDv4.
-- **NO** crear rutas sin JWT + rol. Las **únicas** rutas públicas son `POST /api/auth/login` y `POST /api/auth/registro` (que siempre crea rol `cliente`).
+- **NO** crear rutas sin JWT + rol. Las **únicas** rutas públicas son `POST /api/auth/login`, `POST /api/auth/registro` (siempre crea rol `cliente`) y las de solo lectura/contacto bajo `/api/public/*` (catálogo sin cifras exactas de stock, info y formulario de contacto).
 - **NO** aceptar precios ni totales enviados por el cliente: el backend los calcula desde `catalogo_materiales`.
 - **NO** descontar inventario fuera de una transacción, ni permitir `stock_actual` negativo.
 - **NO** permitir registrar `SALIDA_FLETE` manualmente: solo lo genera `pedidos.service.js`.
-- **NO** mostrar a un cliente pedidos de otro cliente ni datos internos del ERP (obras, inventario, alertas).
+- **NO** mostrar a un cliente pedidos de otro cliente ni datos internos del ERP (obras, inventario, alertas, solicitudes).
+- **NO** exponer al público la cifra exacta de inventario: `/api/public/*` solo devuelve `disponibilidad` (DISPONIBLE / POCAS / AGOTADO).
+- **NO** aprobar una solicitud de material sin descontar stock en la misma transacción (genera un `ENVIO_OBRA`).
 - **NO** guardar contraseñas en texto plano (siempre `bcrypt`) ni devolver `password_hash`.
 - **NO** concatenar valores del usuario dentro de SQL ni de HTML de correos (escapar siempre).
 - **NO** versionar `dev.db`, `.env`, `correos/` ni secretos (SMTP incluido).
@@ -87,13 +89,21 @@ El tema sigue `prefers-color-scheme` y el usuario puede fijarlo con el toggle (`
 1. **Cálculo de Desviación:** `Consumo_Real% > (Avance_Obra% + 5%)  ⇒  ALERTA NARANJA`
    (en `backend/src/servicios/alertas.service.js`). Puedes refactorizar, pero el resultado debe ser idéntico.
 2. **Motor de pedidos:** verificar stock → restar inventario → crear pedido + detalles + movimientos `SALIDA_FLETE`, **todo en una transacción**. Si falta stock de cualquier línea, no se modifica nada (HTTP 409).
-3. **Estados de flete** solo avanzan: `PENDIENTE → EN_RUTA → ENTREGADO`.
+3. **Estados de flete** solo avanzan: `PENDIENTE → EN_RUTA → ENTREGADO`. Pasar a `EN_RUTA` exige chofer y vehículo.
+4. **Cuentas desactivadas** (`users.activo = 0`) no pueden iniciar sesión y sus tokens abiertos dejan de valer de inmediato.
 
 ## Roles (RBAC)
 
 | Rol | Valor en BD | Permisos |
 |-----|-------------|----------|
-| Administrador | `admin` | Acceso total. Dashboard financiero, alertas, notificaciones en vivo de pedidos. |
-| Bodeguero | `bodeguero` | Inventario, `INGRESO_BODEGA`, `ENVIO_OBRA`, preparar y despachar fletes. |
-| Residente de Obra | `residente` | `CONSUMO_OBRA`, avance de fases. |
-| Cliente | `cliente` | Catálogo, cotizar, pedir fletes, ver **sus** pedidos. |
+| Administrador | `admin` | Acceso total. Dashboard, reportes de ventas, productos/precios, usuarios, mensajes, alertas y notificaciones en vivo. |
+| Bodeguero | `bodeguero` | Inventario y puntos de reorden, `INGRESO_BODEGA`, `ENVIO_OBRA`, despachar fletes (chofer/unidad), aprobar o rechazar solicitudes de obra. |
+| Residente de Obra | `residente` | `CONSUMO_OBRA`, avance de fases, solicitudes de material a bodega. |
+| Cliente | `cliente` | Catálogo, cotizar, pedir fletes, ver **sus** pedidos y recibos, editar su perfil. |
+
+## Rutas del frontend
+
+- **Tienda pública** (`/`, `/catalogo`, `/producto/:sku`, `/nosotros`, `/preguntas-frecuentes`, `/contacto`, `/carrito`): sin sesión. El carrito exige registrarse **solo al confirmar**.
+- **Cliente**: `/mi-cuenta` (pedidos y perfil).
+- **Panel interno** (`/panel/*`): solo admin, bodeguero y residente (`staffGuard`).
+- **Acceso**: `/acceso` (login y registro, con `?modo=registro&volver=/carrito`).

@@ -25,7 +25,10 @@ constructx/
 │   │   ├── app/
 │   │   │   ├── core/         # Guards, Interceptors (Token), Servicios HTTP, Socket, Tema, Carrito
 │   │   │   ├── shared/       # Componentes reusables (Shell, Toasts, Tarjetas, Barras, Imagen de material)
-│   │   │   ├── features/     # Vistas: Catálogo, Carrito, Mis pedidos, Fletes, Dashboard, Bodega, Campo, Login
+│   │   │   ├── features/
+│   │   │   │   ├── tienda/       # Tienda pública: layout, inicio, catálogo, producto, nosotros, FAQ, contacto, mi cuenta
+│   │   │   │   ├── panel/        # Panel interno: reportes, productos, usuarios, mensajes, solicitudes
+│   │   │   │   └── ...           # carrito, fletes, dashboard, bodega, field-report, auth
 │   │   │   └── app.routes.ts # Enrutamiento principal
 │   │   ├── assets/           # Logo e ilustraciones de respaldo de materiales
 │   │   ├── environments/     # URL de la API (dev / e2e)
@@ -40,6 +43,7 @@ constructx/
 │   ├── agents.md             # Instrucciones para IAs asistentes (qué sí / qué no)
 │   ├── estructura.md         # Este archivo
 │   ├── flujo_negocio.md      # Ciclo de vida de materiales, pedidos y algoritmo auditor
+│   ├── tour_pruebas.md       # Guía paso a paso para demostrar todo el sistema
 │   └── api.md                # Endpoints REST y eventos de Socket.io
 │
 ├── .gitignore
@@ -77,7 +81,9 @@ constructx/
 | `core/services/pedidos.service.ts` | Cotizar, crear y cambiar estado de pedidos. |
 | `shared/components/toast-container/` | Toasts animados. |
 | `shared/components/material-img/` | Foto del producto con ilustración de respaldo. |
-| `features/catalogo/` | Catálogo visual del cliente (tarjetas con fotos). |
+| `features/tienda/` | Tienda pública (raíz `/`): inicio, catálogo, ficha de producto, nosotros, FAQ, contacto, mi cuenta. |
+| `features/panel/` | Panel interno: reportes de ventas, productos, usuarios, mensajes, solicitudes de material. |
+| `core/data/` | Datos de la empresa y fotografías (un solo lugar para cambiarlos). |
 | `features/carrito/` | Carrito con cotización del servidor y confirmación. |
 | `features/mis-pedidos/` | Historial del cliente con seguimiento en vivo. |
 | `features/fletes/` | Tablero de pedidos para Admin/Bodeguero (tiempo real). |

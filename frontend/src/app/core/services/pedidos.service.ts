@@ -43,10 +43,32 @@ export class PedidosService {
       .pipe(tap((p) => this.upsertLocal(p)));
   }
 
-  cambiarEstado(uuid: string, estado: EstadoPedido): Observable<Pedido> {
+  cambiarEstado(
+    uuid: string,
+    estado: EstadoPedido,
+    despacho?: { chofer: string; vehiculo: string; fecha_estimada?: string },
+  ): Observable<Pedido> {
     return this.http
-      .patch<Pedido>(`${this.api}/pedidos/${uuid}/estado`, { estado })
+      .patch<Pedido>(`${this.api}/pedidos/${uuid}/estado`, { estado, ...despacho })
       .pipe(tap((p) => this.upsertLocal(p)));
+  }
+
+  /** Abre el recibo HTML del pedido en una pestaña nueva (lleva el token por el interceptor). */
+  abrirRecibo(uuid: string): void {
+    const ventana = window.open('', '_blank');
+    this.http.get(`${this.api}/pedidos/${uuid}/recibo`, { responseType: 'text' }).subscribe({
+      next: (html) => {
+        const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        if (ventana) ventana.location.href = url;
+        else window.location.href = url;
+      },
+      error: () => ventana?.close(),
+    });
+  }
+
+  /** Limpia el estado al cambiar de usuario. */
+  limpiar(): void {
+    this.pedidosSubject.next([]);
   }
 
   /** Inserta o reemplaza un pedido en la lista (usado por los eventos de Socket.io). */

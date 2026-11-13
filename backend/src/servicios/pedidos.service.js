@@ -171,6 +171,10 @@ function crear(cliente, body, { notificar = true } = {}) {
     socketService.emitir(socketService.SALAS.STAFF, 'inventario_actualizado', {
       materiales: pedido.detalles.map((d) => d.material_id),
     });
+    // Aviso de reorden si algún material del pedido quedó en o por debajo de su mínimo
+    const ids = new Set(pedido.detalles.map((d) => d.material_id));
+    const bajos = MaterialModel.stockBajo().filter((m) => ids.has(m.material_id));
+    if (bajos.length) socketService.emitir(socketService.SALAS.STAFF, 'stock_bajo', bajos);
     pedido.recibo = enviarReciboEnSegundoPlano(pedido);
   }
 
@@ -193,8 +197,11 @@ function enviarReciboEnSegundoPlano(pedido) {
 
 const SIGUIENTE_ESTADO = { PENDIENTE: 'EN_RUTA', EN_RUTA: 'ENTREGADO' };
 
-/** Avanza el estado del flete (solo hacia adelante: PENDIENTE -> EN_RUTA -> ENTREGADO). */
-function cambiarEstado(uuid, estado, usuario, { notificar = true } = {}) {
+/**
+ * Avanza el estado del flete (solo hacia adelante: PENDIENTE -> EN_RUTA -> ENTREGADO).
+ * Al despachar (EN_RUTA) se registran chofer y vehículo (obligatorios) y una fecha estimada opcional.
+ */
+function cambiarEstado(uuid, estado, usuario, { notificar = true, chofer, vehiculo, fecha_estimada } = {}) {
   if (!PedidoModel.ESTADOS.includes(estado)) {
     throw new HttpError(400, `estado inválido. Valores: ${PedidoModel.ESTADOS.join(', ')}`);
   }
@@ -204,7 +211,18 @@ function cambiarEstado(uuid, estado, usuario, { notificar = true } = {}) {
     throw new HttpError(409, `No se puede pasar de ${pedido.estado} a ${estado}`);
   }
 
-  PedidoModel.updateEstado(uuid, estado, ahora());
+  const extra = {};
+  if (estado === 'EN_RUTA') {
+    extra.chofer = String(chofer || '').trim();
+    extra.vehiculo = String(vehiculo || '').trim();
+    if (!extra.chofer || !extra.vehiculo) throw new HttpError(400, 'Para despachar indica chofer y vehículo');
+    if (fecha_estimada) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_estimada)) throw new HttpError(400, 'fecha_estimada debe ser YYYY-MM-DD');
+      extra.fecha_estimada = fecha_estimada;
+    }
+  }
+
+  PedidoModel.updateEstado(uuid, estado, ahora(), extra);
   const actualizado = PedidoModel.findByUuid(uuid);
 
   if (notificar) {
@@ -226,10 +244,16 @@ function obtener(uuid, usuario) {
   return pedido;
 }
 
+/** HTML del recibo (para verlo o imprimirlo desde el portal). */
+function reciboHtml(uuid, usuario) {
+  const { renderRecibo } = require('./plantillas/recibo.html');
+  return renderRecibo(obtener(uuid, usuario)).html;
+}
+
 function listar(usuario, { estado, limit } = {}) {
   if (estado && !PedidoModel.ESTADOS.includes(estado)) throw new HttpError(400, 'estado inválido');
   const cliente_id = usuario.rol === 'cliente' ? usuario.id : undefined;
   return PedidoModel.list({ cliente_id, estado, limit });
 }
 
-module.exports = { crear, cotizar, cambiarEstado, obtener, listar, calcularFlete };
+module.exports = { crear, cotizar, cambiarEstado, obtener, listar, calcularFlete, reciboHtml };

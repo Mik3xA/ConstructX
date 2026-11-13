@@ -132,3 +132,58 @@
 .stock__bar {
   width: 40%;
 }
+
+// ---------- Atención requerida ----------
+.atencion {
+  display: grid;
+  gap: 0.75rem;
+  @include md {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.aviso {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: $radius;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: border-color $transition;
+  &:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+
+  &__n {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: $radius-sm;
+    background: var(--bg-subtle);
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+  div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+  span {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &.is-warn {
+    border-color: color-mix(in srgb, var(--primary-orange) 35%, transparent);
+    .aviso__n {
+      background: var(--primary-soft);
+      color: var(--primary-orange);
+    }
+  }
+}

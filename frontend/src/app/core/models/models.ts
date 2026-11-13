@@ -83,7 +83,13 @@ export interface ItemInventario {
   codigo_sku: string;
   nombre: string;
   unidad: string;
+  categoria: string;
+  precio_unitario: number;
+  imagen_url: string | null;
+  activo: 0 | 1;
   stock_actual: number;
+  stock_minimo: number;
+  stock_bajo: 0 | 1;
   updated_at: string;
 }
 
@@ -140,7 +146,77 @@ export interface MaterialCatalogo {
   descripcion: string | null;
   precio_unitario: number;
   imagen_url: string | null;
+  /** Solo para usuarios autenticados; el público ve `disponibilidad`. */
+  stock_disponible?: number;
+  disponibilidad?: 'DISPONIBLE' | 'POCAS' | 'AGOTADO';
+  vendidos?: number;
+}
+
+export interface CatalogoPublico {
+  categorias: string[];
+  materiales: MaterialCatalogo[];
+}
+
+export interface InfoPublica {
+  tarifa_flete: { base: number; porcentaje: number; gratis_desde: number };
+  cifras: { fletes_entregados: number; clientes: number; productos: number };
+}
+
+export interface MensajeContacto {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  asunto: string;
+  mensaje: string;
+  leido: 0 | 1;
+  created_at: string;
+}
+
+export type EstadoSolicitud = 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+
+export interface SolicitudMaterial {
+  id: string;
+  proyecto_id: string;
+  proyecto_nombre: string;
+  tarea_nombre: string | null;
+  material_id: string;
+  material_nombre: string;
+  unidad: string;
+  cantidad: number;
+  estado: EstadoSolicitud;
+  notas: string | null;
+  motivo_rechazo: string | null;
+  solicitante_nombre: string;
+  atendido_por_nombre: string | null;
   stock_disponible: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StockBajo {
+  material_id: string;
+  nombre: string;
+  unidad: string;
+  codigo_sku: string;
+  stock_actual: number;
+  stock_minimo: number;
+}
+
+export interface UsuarioAdmin extends Usuario {
+  activo: 0 | 1;
+  created_at: string;
+  total_pedidos: number;
+  total_comprado: number;
+}
+
+export interface ReporteVentas {
+  dias: number;
+  desde: string;
+  serie: Array<{ fecha: string; pedidos: number; total: number }>;
+  top_materiales: Array<{ nombre: string; unidad: string; categoria: string; cantidad: number; importe: number }>;
+  totales: { pedidos: number; ventas: number; ticket_promedio: number; ingresos_flete: number; clientes: number };
+  por_estado: Array<{ estado: EstadoPedido; n: number }>;
 }
 
 export interface CatalogoResponse {
@@ -187,6 +263,11 @@ export interface Pedido {
   telefono_contacto: string | null;
   notas: string | null;
   recibo_enviado_at: string | null;
+  chofer?: string | null;
+  vehiculo?: string | null;
+  fecha_estimada?: string | null;
+  despachado_at?: string | null;
+  entregado_at?: string | null;
   timestamp: string;
   updated_at: string;
   total_lineas?: number;
@@ -203,6 +284,9 @@ export interface DashboardResumen {
     pedidos_hoy: number;
   };
   pedidos_recientes: Pedido[];
+  stock_bajo: StockBajo[];
+  mensajes_sin_leer: number;
+  solicitudes_pendientes: number;
   kpis: {
     proyectos_activos: number;
     alertas_activas: number;

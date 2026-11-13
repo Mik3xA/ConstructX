@@ -97,7 +97,7 @@ describe('Catálogo visual', () => {
   it('devuelve materiales con precio, imagen y stock', async () => {
     const r = await srv.api('GET', '/catalogo', { token: tokens.cliente });
     assert.equal(r.status, 200);
-    assert.ok(r.body.materiales.length >= 8);
+    assert.ok(r.body.materiales.length >= 13);
     for (const m of r.body.materiales) {
       assert.ok(m.precio_unitario > 0, `${m.nombre} sin precio`);
       assert.match(m.imagen_url, /^https:\/\//);
@@ -111,7 +111,8 @@ describe('Catálogo visual', () => {
     assert.ok(acero.body.materiales.every((m) => m.categoria === 'Acero'));
     const q = await srv.api('GET', '/catalogo?q=varilla', { token: tokens.cliente });
     assert.ok(q.body.materiales.length >= 2);
-    assert.ok(q.body.materiales.every((m) => /varilla/i.test(m.nombre)));
+    // la búsqueda cubre nombre, SKU y descripción
+    assert.ok(q.body.materiales.every((m) => /varilla/i.test(`${m.nombre} ${m.codigo_sku} ${m.descripcion}`)));
   });
 
   it('un material desactivado por el admin desaparece del catálogo', async () => {
@@ -278,10 +279,18 @@ describe('Motor de pedidos', () => {
     });
     const url = `/pedidos/${p.body.uuid}/estado`;
     assert.equal((await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'ENTREGADO' } })).status, 409);
-    assert.equal((await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'EN_RUTA' } })).status, 200);
+    assert.equal((await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'EN_RUTA' } })).status, 400, 'sin chofer');
+    const ruta = await srv.api('PATCH', url, {
+      token: tokens.bodega,
+      body: { estado: 'EN_RUTA', chofer: 'Jorge', vehiculo: 'Torton 12', fecha_estimada: '2026-11-20' },
+    });
+    assert.equal(ruta.status, 200);
+    assert.equal(ruta.body.chofer, 'Jorge');
+    assert.ok(ruta.body.despachado_at);
     assert.equal((await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'PENDIENTE' } })).status, 409);
     const fin = await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'ENTREGADO' } });
     assert.equal(fin.body.estado, 'ENTREGADO');
+    assert.ok(fin.body.entregado_at);
     assert.equal((await srv.api('PATCH', url, { token: tokens.bodega, body: { estado: 'CANCELADO' } })).status, 400);
   });
 });
@@ -324,7 +333,10 @@ describe('Tiempo real (Socket.io)', () => {
       body: { items: [{ material_id: catalogo['VAR-3/8'].id, cantidad: 1 }] },
     });
     const evento = srv.esperarEvento(cliente, 'flete_actualizado');
-    await srv.api('PATCH', `/pedidos/${p.body.uuid}/estado`, { token: tokens.bodega, body: { estado: 'EN_RUTA' } });
+    await srv.api('PATCH', `/pedidos/${p.body.uuid}/estado`, {
+      token: tokens.bodega,
+      body: { estado: 'EN_RUTA', chofer: 'Jorge', vehiculo: 'Torton 12' },
+    });
     const e = await evento;
     assert.equal(e.uuid, p.body.uuid);
     assert.equal(e.estado, 'EN_RUTA');

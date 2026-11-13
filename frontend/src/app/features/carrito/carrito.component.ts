@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { Subscription, catchError, debounceTime, of, switchMap } from 'rxjs';
 import { Cotizacion, ItemCarrito, Pedido } from '../../core/models/models';
 import { AuthService } from '../../core/services/auth.service';
+import { CatalogoService } from '../../core/services/catalogo.service';
+import { PublicoService } from '../../core/services/publico.service';
 import { CarritoService } from '../../core/services/carrito.service';
 import { PedidosService } from '../../core/services/pedidos.service';
 import { mensajeError } from '../../core/utils/http-error';
@@ -21,7 +23,9 @@ import { MaterialImgComponent } from '../../shared/components/material-img/mater
 export class CarritoComponent implements OnInit, OnDestroy {
   readonly carrito = inject(CarritoService);
   private readonly pedidos = inject(PedidosService);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
+  private readonly catalogo = inject(CatalogoService);
+  readonly info$ = inject(PublicoService).info$;
 
   direccion = this.auth.user?.direccion ?? '';
   telefono = this.auth.user?.telefono ?? '';
@@ -37,7 +41,21 @@ export class CarritoComponent implements OnInit, OnDestroy {
   private uuidPendiente: string | null = null;
   private sub?: Subscription;
 
+  /** Solo un cliente con sesión puede cotizar en el servidor y confirmar. */
+  get esCliente(): boolean {
+    return this.auth.esCliente;
+  }
+
+  /** Estimación local para visitantes (el servidor recalcula al confirmar). */
+  estimarFlete(subtotal: number, t: { base: number; porcentaje: number; gratis_desde: number }): number {
+    if (subtotal <= 0 || subtotal >= t.gratis_desde) return 0;
+    return Math.round((t.base + subtotal * t.porcentaje) * 100) / 100;
+  }
+
   ngOnInit(): void {
+    if (!this.esCliente) return;
+    // Con sesión de cliente: precios y existencias exactas del catálogo autenticado
+    this.catalogo.cargar().subscribe((c) => this.carrito.refrescar(c.materiales));
     // Cada cambio del carrito pide al backend la cotización oficial (precios + flete + faltantes)
     this.sub = this.carrito.items$
       .pipe(

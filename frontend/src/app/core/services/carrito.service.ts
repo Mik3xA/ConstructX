@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map } from 'rxjs';
 import { ItemCarrito, MaterialCatalogo } from '../models/models';
+import { ToastService } from './toast.service';
 
 const CLAVE = 'cx_carrito';
 
@@ -17,6 +18,17 @@ export class CarritoService {
     map((items) => items.reduce((s, i) => s + i.cantidad * i.material.precio_unitario, 0)),
   );
 
+  private readonly toasts = inject(ToastService);
+
+  /** Agrega y muestra un aviso con enlace al carrito. */
+  agregarConAviso(material: MaterialCatalogo, cantidad = 1): void {
+    this.agregar(material, cantidad);
+    this.toasts.mostrar(
+      { tipo: 'exito', titulo: 'Agregado al carrito', mensaje: `${cantidad} ${material.unidad} · ${material.nombre}`, enlace: '/carrito' },
+      3000,
+    );
+  }
+
   get items(): ItemCarrito[] {
     return this.itemsSubject.value;
   }
@@ -31,7 +43,9 @@ export class CarritoService {
   }
 
   fijarCantidad(material: MaterialCatalogo, cantidad: number): void {
-    const limpia = Math.max(0, Math.min(Number(cantidad) || 0, material.stock_disponible));
+    // Si conocemos el stock exacto (sesión iniciada) se limita; si no, lo valida el servidor al confirmar
+    const tope = material.stock_disponible ?? Number.POSITIVE_INFINITY;
+    const limpia = Math.max(0, Math.min(Math.floor(Number(cantidad) || 0), tope));
     const otros = this.items.filter((i) => i.material.id !== material.id);
     const existente = this.items.findIndex((i) => i.material.id === material.id);
     if (limpia <= 0) return this.guardar(otros);
@@ -57,7 +71,7 @@ export class CarritoService {
     this.guardar(
       this.items.map((i) => {
         const m = porId.get(i.material.id);
-        return m ? { material: m, cantidad: Math.min(i.cantidad, m.stock_disponible) } : i;
+        return m ? { material: m, cantidad: Math.min(i.cantidad, m.stock_disponible ?? i.cantidad) } : i;
       }).filter((i) => i.cantidad > 0),
     );
   }

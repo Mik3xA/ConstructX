@@ -19,7 +19,8 @@ const MaterialModel = {
     return db
       .prepare(
         `SELECT m.id, m.codigo_sku, m.nombre, m.unidad, m.categoria, m.descripcion,
-                m.precio_unitario, m.imagen_url, COALESCE(i.stock_actual, 0) AS stock_disponible
+                m.precio_unitario, m.imagen_url, COALESCE(i.stock_actual, 0) AS stock_disponible,
+                COALESCE((SELECT SUM(d.cantidad) FROM detalles_pedido d WHERE d.material_id = m.id), 0) AS vendidos
          FROM catalogo_materiales m
          LEFT JOIN inventario_central i ON i.material_id = m.id
          WHERE ${where.join(' AND ')}
@@ -74,13 +75,33 @@ const MaterialModel = {
   inventario() {
     return db
       .prepare(
-        `SELECT i.id, i.material_id, i.stock_actual, i.updated_at,
-                m.codigo_sku, m.nombre, m.unidad
+        `SELECT i.id, i.material_id, i.stock_actual, i.stock_minimo, i.updated_at,
+                m.codigo_sku, m.nombre, m.unidad, m.categoria, m.precio_unitario, m.imagen_url, m.activo,
+                CASE WHEN i.stock_actual <= i.stock_minimo THEN 1 ELSE 0 END AS stock_bajo
          FROM inventario_central i
          JOIN catalogo_materiales m ON m.id = i.material_id
          ORDER BY m.nombre`
       )
       .all();
+  },
+
+  /** Materiales en o por debajo de su punto de reorden. */
+  stockBajo() {
+    return db
+      .prepare(
+        `SELECT m.id AS material_id, m.nombre, m.unidad, m.codigo_sku, i.stock_actual, i.stock_minimo
+         FROM inventario_central i JOIN catalogo_materiales m ON m.id = i.material_id
+         WHERE i.stock_actual <= i.stock_minimo
+         ORDER BY (i.stock_actual / MAX(i.stock_minimo, 1)) ASC`
+      )
+      .all();
+  },
+
+  fijarStockMinimo(material_id, stock_minimo) {
+    const { changes } = db
+      .prepare('UPDATE inventario_central SET stock_minimo = ?, updated_at = ? WHERE material_id = ?')
+      .run(stock_minimo, ahora(), material_id);
+    return changes > 0;
   },
 
   stock(material_id) {
