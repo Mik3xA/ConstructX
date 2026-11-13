@@ -1,0 +1,38 @@
+@use 'variables' as *;
+
+@mixin card {
+  background: linear-gradient(180deg, $charcoal-800 0%, $charcoal-850 100%);
+  border: $border;
+  border-radius: $radius-lg;
+}
+
+@mixin glass {
+  background: rgba(21, 25, 32, 0.72);
+  backdrop-filter: blur(14px);
+  border: $border;
+}
+
+@mixin focus-ring($color: $blue-500) {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba($color, 0.35);
+}
+
+@mixin eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $white-60;
+}
+
+@mixin md {
+  @media (min-width: $bp-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $bp-lg) {
+    @content;
+  }
+}

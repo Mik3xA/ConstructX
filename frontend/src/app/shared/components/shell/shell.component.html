@@ -1,0 +1,37 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="" width="32" height="32" />
+      <div>
+        <strong>BuildSync</strong>
+        <span>ERP</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      @for (item of items; track item.ruta) {
+        <a [routerLink]="item.ruta" routerLinkActive="is-active" class="nav__item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icono" /></svg>
+          <span>{{ item.etiqueta }}</span>
+        </a>
+      }
+    </nav>
+
+    @if (auth.user$ | async; as user) {
+      <div class="user">
+        <div class="user__avatar">{{ iniciales(user.nombre) }}</div>
+        <div class="user__info">
+          <strong>{{ user.nombre }}</strong>
+          <span>{{ etiquetaRol[user.rol] }}</span>
+        </div>
+        <button class="user__logout" type="button" (click)="auth.logout()" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 17l5-5-5-5M20 12H9M12 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" /></svg>
+        </button>
+      </div>
+    }
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

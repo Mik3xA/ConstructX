@@ -1,0 +1,174 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  min-height: 100%;
+
+  @include md {
+    padding: 2rem 2.5rem;
+  }
+
+  &__header {
+    h1 {
+      font-size: 1.85rem;
+      margin: 0.25rem 0;
+    }
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.selectors {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+
+  @include md {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+
+  @include lg {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+
+  h2 {
+    font-size: 1.05rem;
+  }
+}
+
+.line {
+  display: grid;
+  gap: 0.75rem 1rem;
+  padding: 1rem 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'info  budget'
+    'input input'
+    'bar   bar';
+  border-top: 1px solid $white-04;
+
+  @include md {
+    grid-template-columns: minmax(0, 1.2fr) auto 170px;
+    grid-template-areas:
+      'info budget input'
+      'bar  bar    bar';
+    align-items: center;
+  }
+
+  &--risk {
+    .line__info strong {
+      color: $orange-300;
+    }
+  }
+
+  &__info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    span {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__budget {
+    grid-area: budget;
+    font-size: 0.88rem;
+    text-align: right;
+  }
+
+  &__input {
+    grid-area: input;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .input {
+      text-align: right;
+    }
+    span {
+      font-size: 0.8rem;
+      min-width: 40px;
+    }
+  }
+
+  &__bar {
+    grid-area: bar;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 56px;
+    align-items: center;
+    gap: 0.75rem;
+
+    span {
+      text-align: right;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  @include lg {
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__value {
+    font-size: 3rem;
+    font-weight: 600;
+    line-height: 1;
+    color: $blue-400;
+
+    small {
+      font-size: 1.25rem;
+      color: $white-60;
+    }
+  }
+
+  &__scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    margin-top: -0.4rem;
+  }
+}
+
+.small {
+  font-size: 0.78rem;
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: 3rem;
+  color: $white-60;
+}

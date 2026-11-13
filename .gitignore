@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+
+# Base de datos local (se genera con: cd backend && npm run db:init)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Entorno / secretos
+.env
+.env.*
+!.env.example
+
+# Builds Angular
+frontend/dist/
+frontend/.angular/
+out-tsc/
+
+# Logs y SO
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/

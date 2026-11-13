@@ -1,0 +1,95 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---------- CSS custom properties (para uso en componentes) ----------
+:root {
+  --bs-bg: #{$charcoal-900};
+  --bs-surface: #{$charcoal-800};
+  --bs-border: #{$white-08};
+  --bs-text: #{$white};
+  --bs-muted: #{$white-60};
+  --bs-primary: #{$blue-500};
+  --bs-accent: #{$orange-500};
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// ---------- Full-Page UI ----------
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: $charcoal-900;
+  color: $white;
+  font-family: $font-sans;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+bs-root {
+  display: block;
+  height: 100%;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: $blue-400;
+  text-decoration: none;
+  &:hover {
+    color: $blue-300;
+  }
+}
+
+::selection {
+  background: $blue-glow;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: $charcoal-600;
+  border-radius: 10px;
+  border: 2px solid $charcoal-900;
+}
+
+.mono {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  @include eyebrow;
+}
+
+.muted {
+  color: $white-60;
+}
+
+.text-accent {
+  color: $orange-400;
+}
+
+.text-primary {
+  color: $blue-400;
+}

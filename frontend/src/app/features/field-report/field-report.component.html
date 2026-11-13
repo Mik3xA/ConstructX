@@ -1,0 +1,124 @@
+<div class="page">
+  <header class="page__header">
+    <span class="eyebrow">Residente de obra</span>
+    <h1>Reporte de campo</h1>
+    <p class="muted">Registra el material vertido hoy y el avance real de la fase.</p>
+  </header>
+
+  <!-- Selección de contexto -->
+  <section class="selectors card">
+    <div class="field">
+      <label for="proyecto">Proyecto</label>
+      <select id="proyecto" class="select" [ngModel]="proyectoId" (ngModelChange)="seleccionarProyecto($event)">
+        <option value="">Selecciona…</option>
+        @for (p of proyectos$ | async; track p.id) {
+          <option [value]="p.id">{{ p.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="fase">Fase</label>
+      <select id="fase" class="select" [ngModel]="faseId" (ngModelChange)="seleccionarFase($event)" [disabled]="!detalle">
+        @for (f of detalle?.fases ?? []; track f.id) {
+          <option [value]="f.id">{{ f.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="tarea">Tarea</label>
+      <select id="tarea" class="select" [ngModel]="tareaId" (ngModelChange)="seleccionarTarea($event)" [disabled]="!fase">
+        @for (t of fase?.tareas ?? []; track t.id) {
+          <option [value]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+    </div>
+  </section>
+
+  @if (fase && tarea) {
+    <div class="layout">
+      <!-- Consumo -->
+      <section class="card">
+        <div class="card__head">
+          <h2>Consumo del día · {{ tarea.nombre }}</h2>
+          <span class="chip chip--blue">{{ tarea.bom.length }} materiales en BOM</span>
+        </div>
+
+        @for (l of tarea.bom; track l.id) {
+          <div class="line" [class.line--risk]="excedeTolerancia(l)">
+            <div class="line__info">
+              <strong>{{ l.material_nombre }}</strong>
+              <span class="muted mono">{{ l.codigo_sku }}</span>
+            </div>
+
+            <div class="line__budget mono">
+              <span>{{ l.cantidad_consumida | number: '1.0-2' }}</span>
+              <span class="muted"> / {{ l.cantidad_presupuestada | number: '1.0-2' }} {{ l.unidad }}</span>
+            </div>
+
+            <div class="line__input">
+              <input
+                class="input mono"
+                type="number"
+                min="0"
+                step="any"
+                inputmode="decimal"
+                placeholder="0"
+                [attr.aria-label]="'Cantidad de ' + l.material_nombre + ' consumida hoy'"
+                [(ngModel)]="consumos[l.material_id]"
+              />
+              <span class="muted">{{ l.unidad }}</span>
+            </div>
+
+            <div class="line__bar">
+              <bs-progress-bar [valor]="consumoProyectado(l)" [marcador]="avance" [alerta]="excedeTolerancia(l)" />
+              <span class="mono" [class.text-accent]="excedeTolerancia(l)">
+                {{ consumoProyectado(l) | number: '1.0-1' }}%
+              </span>
+            </div>
+          </div>
+        } @empty {
+          <p class="muted">Esta tarea no tiene materiales presupuestados.</p>
+        }
+      </section>
+
+      <!-- Avance + Envío -->
+      <aside class="side">
+        <section class="card progress">
+          <span class="eyebrow">Avance real · {{ fase.nombre }}</span>
+          <div class="progress__value mono">{{ avance }}<small>%</small></div>
+          <input type="range" min="0" max="100" step="1" [(ngModel)]="avance" aria-label="Porcentaje de avance real" />
+          <div class="progress__scale mono muted"><span>0</span><span>50</span><span>100</span></div>
+          @if (avance !== fase.porcentaje_avance_real) {
+            <span class="muted small">Último reportado: {{ fase.porcentaje_avance_real }}%</span>
+          }
+        </section>
+
+        @if (lineasEnRiesgo > 0) {
+          <div class="banner banner--error">
+            <strong>{{ lineasEnRiesgo }} material(es)</strong> superarían el avance + {{ tolerancia }}%.
+            Se notificará al Administrador como posible merma.
+          </div>
+        }
+        @if (error) {
+          <div class="banner banner--error">{{ error }}</div>
+        }
+        @if (exito) {
+          <div class="banner banner--ok">{{ exito }}</div>
+        }
+
+        <button
+          class="btn btn--lg btn--block"
+          [class.btn--primary]="lineasEnRiesgo === 0"
+          [class.btn--warning]="lineasEnRiesgo > 0"
+          type="button"
+          (click)="enviar()"
+          [disabled]="!hayCambios || enviando"
+        >
+          {{ enviando ? 'Enviando…' : 'Enviar reporte' }}
+        </button>
+      </aside>
+    </div>
+  } @else if (proyectoId && !detalle) {
+    <div class="loading">Cargando proyecto…</div>
+  }
+</div>

@@ -1,0 +1,218 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// ---------- Botones ----------
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1.1rem;
+  border-radius: $radius;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background $transition, border-color $transition, transform $transition, box-shadow $transition;
+  white-space: nowrap;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  &:focus-visible {
+    @include focus-ring;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $blue-600;
+    color: $white;
+    &:hover:not(:disabled) {
+      background: $blue-500;
+      box-shadow: 0 8px 24px $blue-glow;
+    }
+  }
+
+  &--warning {
+    background: $orange-500;
+    color: $charcoal-950;
+    &:hover:not(:disabled) {
+      background: $orange-400;
+      box-shadow: 0 8px 24px $orange-glow;
+    }
+    &:focus-visible {
+      @include focus-ring($orange-500);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $white-80;
+    border-color: $white-12;
+    &:hover:not(:disabled) {
+      background: $white-04;
+      color: $white;
+    }
+  }
+
+  &--block {
+    width: 100%;
+  }
+  &--lg {
+    height: 48px;
+    font-size: 1rem;
+  }
+}
+
+// ---------- Formularios ----------
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    @include eyebrow;
+  }
+}
+
+.input,
+.select {
+  height: 44px;
+  width: 100%;
+  padding: 0 0.9rem;
+  background: $charcoal-900;
+  color: $white;
+  border: 1px solid $white-12;
+  border-radius: $radius;
+  font: inherit;
+  transition: border-color $transition, box-shadow $transition;
+
+  &::placeholder {
+    color: $white-40;
+  }
+  &:focus {
+    border-color: $blue-500;
+    @include focus-ring;
+  }
+  &.ng-invalid.ng-touched {
+    border-color: $orange-500;
+  }
+}
+
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, $white-60 50%),
+    linear-gradient(135deg, $white-60 50%, transparent 50%);
+  background-position: calc(100% - 18px) 19px, calc(100% - 13px) 19px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.2rem;
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: $blue-500;
+}
+
+// ---------- Tarjetas ----------
+.card {
+  @include card;
+  padding: 1.25rem;
+}
+
+// ---------- Chips / Badges ----------
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: $border;
+  color: $white-80;
+  background: $white-04;
+
+  &--blue {
+    color: $blue-300;
+    background: rgba($blue-500, 0.12);
+    border-color: rgba($blue-500, 0.3);
+  }
+  &--orange {
+    color: $orange-300;
+    background: rgba($orange-500, 0.12);
+    border-color: rgba($orange-500, 0.35);
+  }
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  &--pulse {
+    animation: pulse 1.6s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba($orange-500, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba($orange-500, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($orange-500, 0);
+  }
+}
+
+// ---------- Tablas ----------
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+
+  th {
+    @include eyebrow;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: $border;
+  }
+  td {
+    padding: 0.75rem;
+    border-bottom: 1px solid $white-04;
+  }
+  tr:hover td {
+    background: $white-04;
+  }
+  .num {
+    text-align: right;
+    font-family: $font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ---------- Mensajes ----------
+.banner {
+  padding: 0.75rem 1rem;
+  border-radius: $radius;
+  font-size: 0.9rem;
+  border: 1px solid;
+
+  &--error {
+    color: $orange-300;
+    border-color: rgba($orange-500, 0.4);
+    background: rgba($orange-500, 0.08);
+  }
+  &--ok {
+    color: $blue-300;
+    border-color: rgba($blue-500, 0.4);
+    background: rgba($blue-500, 0.08);
+  }
+}

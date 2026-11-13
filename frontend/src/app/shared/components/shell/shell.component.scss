@@ -1,0 +1,213 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+
+  @include md {
+    flex-direction: row;
+  }
+}
+
+.sidebar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: $charcoal-950;
+  border-bottom: $border;
+
+  @include md {
+    flex-direction: column;
+    align-items: stretch;
+    width: $sidebar-width;
+    flex-shrink: 0;
+    padding: 1.5rem 1rem;
+    border-bottom: 0;
+    border-right: $border;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  div {
+    display: none;
+    flex-direction: column;
+    line-height: 1.1;
+    @include md {
+      display: flex;
+    }
+  }
+  strong {
+    font-size: 1.05rem;
+  }
+  span {
+    @include eyebrow;
+    font-size: 0.65rem;
+    color: $blue-400;
+  }
+
+  @include md {
+    padding: 0 0.5rem 1.5rem;
+  }
+}
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+
+  @include md {
+    flex-direction: column;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: $radius;
+    color: $white-60;
+    font-weight: 500;
+    font-size: 0.92rem;
+    transition: background $transition, color $transition;
+    position: relative;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    span {
+      display: none;
+      @include md {
+        display: inline;
+      }
+    }
+
+    &:hover {
+      color: $white;
+      background: $white-04;
+    }
+
+    &.is-active {
+      color: $white;
+      background: rgba($blue-500, 0.14);
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: $blue-500;
+        display: none;
+        @include md {
+          display: block;
+        }
+      }
+      svg {
+        color: $blue-400;
+      }
+    }
+  }
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  @include md {
+    padding: 0.75rem;
+    border-radius: $radius;
+    border: $border;
+    background: $charcoal-850;
+  }
+
+  &__avatar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, $blue-600, $blue-400);
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  &__info {
+    display: none;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+    flex: 1;
+
+    @include md {
+      display: flex;
+    }
+    strong {
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    span {
+      font-size: 0.75rem;
+      color: $white-60;
+    }
+  }
+
+  &__logout {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $white-60;
+    cursor: pointer;
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    &:hover {
+      color: $orange-400;
+      background: $white-04;
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  background: radial-gradient(1200px 600px at 100% -10%, rgba($blue-600, 0.08), transparent 60%), $charcoal-900;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "buildsync-backend",
+  "version": "1.0.0",
+  "description": "BuildSync ERP - API de control de materiales (Node.js + Express + SQLite)",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:init": "node src/config/init-db.js",
+    "db:reset": "node src/config/init-db.js --reset"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
